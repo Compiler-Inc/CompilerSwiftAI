@@ -3,13 +3,13 @@
 import Foundation
 
 // Response model
-public struct DLMCommand<Args: Decodable>: Decodable {
+public struct DLMCommand<Args>: Decodable, Sendable where Args: Decodable & Sendable {
     public let command: String
     public let args: Args?
 }
 
 // Request model
-struct DLMRequest<State: Encodable>: Encodable {
+struct DLMRequest<State>: Encodable, Sendable where State: Encodable & Sendable {
     let id: String
     let prompt: String
     let current_state: State
@@ -27,7 +27,7 @@ public final actor DLMService {
         self.appId = appId
     }
 
-    public func processCommand<State: Encodable, Args: Decodable>(_ content: String, for state: State) async throws -> [DLMCommand<Args>] {
+    public func processCommand<State: Encodable & Sendable, Args: Decodable & Sendable>(_ content: String, for state: State) async throws -> [DLMCommand<Args>] {
         print("🚀 Starting processCommand with content: \(content)")
 
         guard let url = URL(string: baseURL) else {
