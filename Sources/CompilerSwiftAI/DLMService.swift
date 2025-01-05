@@ -4,8 +4,8 @@ import Foundation
 
 // Response model
 public struct DLMCommand<Args: Decodable>: Decodable {
-    let command: String
-    let args: Args?
+    public let command: String
+    public let args: Args?
 }
 
 // Request model
