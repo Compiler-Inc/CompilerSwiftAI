@@ -17,7 +17,6 @@ struct DLMRequest<State>: Encodable, Sendable where State: Encodable & Sendable 
 
 public final actor DLMService {
     private let baseURL = "https://backend.compiler.inc/function-call"
-    var manualCommand: String?
 
     let apiKey: String
     let appId: String
