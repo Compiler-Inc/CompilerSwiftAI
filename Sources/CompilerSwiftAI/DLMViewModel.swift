@@ -12,7 +12,7 @@ class DLMViewModel {
     private var promptTap: RawDataTap?
     private let silencer = Mixer()
     
-    var processingSteps: [ProcessingStep] = []
+    var processingSteps: [DLMProcessingStep] = []
     
     var manualCommand = ""
     
@@ -39,7 +39,7 @@ class DLMViewModel {
     }
     
     public func addStep(_ text: String) {
-        processingSteps.append(ProcessingStep(text: text, isComplete: false))
+        processingSteps.append(DLMProcessingStep(text: text, isComplete: false))
     }
 
     public func completeLastStep() {
