@@ -5,8 +5,8 @@ import Foundation
 public struct DLMProcessingStep: Identifiable, Hashable {
     
     public let id = UUID()
-    let text: String
-    var isComplete: Bool
+    public let text: String
+    public var isComplete: Bool
     
     public init(text: String, isComplete: Bool) {
         self.text = text
