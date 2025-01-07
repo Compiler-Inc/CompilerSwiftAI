@@ -32,7 +32,7 @@ public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable
     public var body: some View {
         VStack(spacing: 4) {
             DLMTextInputView(model: model, process: process)
-            DLMProcessingStepsView(model: model)
+            DLMProcessingStepsView(steps: model.processingSteps)
         }
         .frame(minWidth: 200)
         .background(DLMColors.primary10)

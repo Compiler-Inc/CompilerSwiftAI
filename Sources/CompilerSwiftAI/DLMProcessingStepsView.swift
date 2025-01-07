@@ -4,19 +4,19 @@ import SwiftUI
 
 struct DLMProcessingStepsView: View {
     
-    var model: DLMViewModel
+    var steps: [DLMProcessingStep]
     
     var body: some View {
         // Processing Steps Area
         VStack(alignment: .leading, spacing: 4) {
-            if !model.processingSteps.isEmpty {
+            if !steps.isEmpty {
             Text("DLM Output")
                 .foregroundColor(DLMColors.primary75)
                     .font(.caption)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(model.processingSteps) { step in
+                    ForEach(steps) { step in
                         HStack {
                             Text(step.text)
                                 .foregroundColor(DLMColors.primary75)
@@ -42,5 +42,5 @@ struct DLMProcessingStepsView: View {
 }
 
 #Preview {
-    DLMProcessingStepsView(model: DLMViewModel())
+    DLMProcessingStepsView(steps: [])
 }
