@@ -2,13 +2,21 @@
 
 import SwiftUI
 
-struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
+public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
+    
+    @State var model = DLMViewModel()
     
     var state: AppState
-    @State var model = DLMViewModel()
     var dlm: DLMService
-    var execute: ([DLMCommand<Args>]) -> ()
     var deepgram: DeepgramService?
+    var execute: ([DLMCommand<Args>]) -> ()
+    
+    public init(state: AppState, dlm: DLMService, deepgram: DeepgramService? = nil, execute: @escaping ([DLMCommand<Args>]) -> ()) {
+        self.state = state
+        self.dlm = dlm
+        self.execute = execute
+        self.deepgram = deepgram
+    }
     
     func process(prompt: String) {
         Task {
@@ -21,7 +29,7 @@ struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View
         }
     }
 
-    var body: some View {
+    public var body: some View {
         VStack(spacing: 4) {
             DLMTextInputView(model: model, process: process)
             DLMProcessingStepsView(model: model)
