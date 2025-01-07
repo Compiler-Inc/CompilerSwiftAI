@@ -9,13 +9,15 @@ public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable
     var state: AppState
     var dlm: DLMService
     var deepgram: DeepgramService?
+    var describe: (DLMCommand<Args>) -> String
     var execute: ([DLMCommand<Args>]) -> ()
     
-    public init(state: AppState, dlm: DLMService, deepgram: DeepgramService? = nil, execute: @escaping ([DLMCommand<Args>]) -> ()) {
+    public init(state: AppState, dlm: DLMService, deepgram: DeepgramService? = nil, describe: @escaping (DLMCommand<Args>) -> String, execute: @escaping ([DLMCommand<Args>]) -> ()) {
         self.state = state
         self.dlm = dlm
-        self.execute = execute
         self.deepgram = deepgram
+        self.describe = describe
+        self.execute = execute
     }
     
     func process(prompt: String) {
@@ -23,9 +25,12 @@ public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable
             model.addStep("Sending request to DLM")
             guard let commands: [DLMCommand<Args>] = try? await dlm.processCommand(prompt, for: state) else { return }
             model.completeLastStep()
-            model.addStep("Executing commands")
+            
+            for command in commands {
+                model.addStep(describe(command))
+                model.completeLastStep()
+            }
             execute(commands)
-            model.completeLastStep()
         }
     }
 
