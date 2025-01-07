@@ -10,9 +10,9 @@ public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable
     var dlm: DLMService
     var deepgram: DeepgramService?
     var describe: (DLMCommand<Args>) -> String
-    var execute: ([DLMCommand<Args>]) -> ()
+    var execute: (DLMCommand<Args>) -> ()
     
-    public init(state: AppState, dlm: DLMService, deepgram: DeepgramService? = nil, describe: @escaping (DLMCommand<Args>) -> String, execute: @escaping ([DLMCommand<Args>]) -> ()) {
+    public init(state: AppState, dlm: DLMService, deepgram: DeepgramService? = nil, describe: @escaping (DLMCommand<Args>) -> String, execute: @escaping (DLMCommand<Args>) -> ()) {
         self.state = state
         self.dlm = dlm
         self.deepgram = deepgram
@@ -28,9 +28,9 @@ public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable
             
             for command in commands {
                 model.addStep(describe(command))
+                execute(command)
                 model.completeLastStep()
             }
-            execute(commands)
         }
     }
 
