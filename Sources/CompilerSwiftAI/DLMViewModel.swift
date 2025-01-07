@@ -1,9 +1,4 @@
-//
-//  DLMViewModel.swift
-//  Metronome
-//
-//  Created by Aurelius Prochazka on 1/6/25.
-//
+//  Copyright © 2025 Compiler, Inc. All rights reserved.
 
 import Foundation
 import AudioKit

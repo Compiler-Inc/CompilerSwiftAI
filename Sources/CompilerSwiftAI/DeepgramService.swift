@@ -104,7 +104,7 @@ struct ProfanityAnalysis {
 
 @MainActor
 @Observable
-class DeepgramService {
+public final class DeepgramService {
     private var webSocket: URLSessionWebSocketTask?
     var isListening = false
     var onTranscriptReceived: ((String) -> Void)?
@@ -115,7 +115,7 @@ class DeepgramService {
     
     let apiKey: String
         
-    init(apiKey: String) {
+    public init(apiKey: String) {
         self.apiKey = apiKey
     }
     
