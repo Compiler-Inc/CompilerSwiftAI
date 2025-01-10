@@ -22,7 +22,7 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
     
     func process(prompt: String) {
         Task {
-            model.addStep("Sending request to DLM")
+            model.addStep("Sending request to Compiler")
             guard let commands: [DLMCommand<Args>] = try? await dlm.processCommand(prompt, for: state) else { return }
             model.completeLastStep()
             
