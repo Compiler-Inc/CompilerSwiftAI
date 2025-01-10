@@ -31,7 +31,11 @@ struct TextInputView: View {
                 
                 if let deepgram = model.deepgram {
                     Button {
-                        model.startRealtimeTranscription()
+                        if deepgram.isListening {
+                            model.stopRealtimeTranscription()
+                        } else {
+                            model.startRealtimeTranscription()
+                        }
                     } label: {
                         Image(systemName: deepgram.isListening ? "microphone.fill" : "microphone")
                             .padding(.vertical, 8)
