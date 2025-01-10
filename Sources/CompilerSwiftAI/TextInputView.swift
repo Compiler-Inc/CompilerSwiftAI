@@ -27,26 +27,34 @@ struct TextInputView: View {
             .cornerRadius(8)
             .tint(DLMColors.primary100)
 
-            Button(action: {
-                process(model.manualCommand)
-            }) {
-                HStack {
-                    Text("Submit")
-                    Image(systemName: "arrow.right.circle.fill")
+            HStack {
+                Button {
+                    model.startRealtimeTranscription()
+                } label: {
+                    Image(systemName: "microphone")
+                        .padding(.vertical, 8)
+                        .frame(width: 40)
+                        .background(DLMColors.dlmGradient)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(DLMColors.dlmGradient)
-                .foregroundColor(.white)
-                .cornerRadius(8)
-            }
-            .disabled(model.manualCommand.isEmpty)
-            .buttonStyle(.plain)
-            
-            Button {
-                model.startRealtimeTranscription()
-            } label: {
-                Text("Start TX")
+                
+                Button(action: {
+                    process(model.manualCommand)
+                }) {
+                    HStack {
+                        Text("Submit")
+                        Image(systemName: "arrow.right.circle.fill")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(DLMColors.dlmGradient)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                }
+                .disabled(model.manualCommand.isEmpty)
+                .buttonStyle(.plain)
+                
             }
         }
         .padding()
