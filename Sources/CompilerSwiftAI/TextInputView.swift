@@ -43,6 +43,7 @@ struct TextInputView: View {
                 }
                 
                 Button(action: {
+                    model.stopRealtimeTranscription()
                     process(model.manualCommand)
                 }) {
                     HStack {
