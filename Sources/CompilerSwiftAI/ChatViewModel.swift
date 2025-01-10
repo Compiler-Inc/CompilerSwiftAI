@@ -5,7 +5,7 @@ import AudioKit
 
 @MainActor
 @Observable
-class DLMViewModel {
+class ChatViewModel {
     
     var deepgram: DeepgramService?
     private let audioEngine = AudioEngine()

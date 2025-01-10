@@ -4,7 +4,7 @@ import SwiftUI
 
 public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
     
-    @State var model = DLMViewModel()
+    @State var model = ChatViewModel()
     
     var state: AppState
     var dlm: Service

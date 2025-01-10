@@ -4,7 +4,7 @@ import SwiftUI
 
 struct DLMTextInputView: View {
     
-    @Bindable var model: DLMViewModel
+    @Bindable var model: ChatViewModel
     var process: (String) -> ()
         
     var body: some View {
@@ -54,6 +54,6 @@ struct DLMTextInputView: View {
 }
 
 #Preview {
-    let model = DLMViewModel()
+    let model = ChatViewModel()
     DLMTextInputView(model: model, process: { _ in })
 }
