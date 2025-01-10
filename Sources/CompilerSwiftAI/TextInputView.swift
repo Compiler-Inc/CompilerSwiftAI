@@ -28,15 +28,18 @@ struct TextInputView: View {
             .tint(DLMColors.primary100)
 
             HStack {
-                Button {
-                    model.startRealtimeTranscription()
-                } label: {
-                    Image(systemName: "microphone")
-                        .padding(.vertical, 8)
-                        .frame(width: 40)
-                        .background(DLMColors.dlmGradient)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                
+                if let deepgram = model.deepgram {
+                    Button {
+                        model.startRealtimeTranscription()
+                    } label: {
+                        Image(systemName: deepgram.isListening ? "microphone.fill" : "microphone")
+                            .padding(.vertical, 8)
+                            .frame(width: 40)
+                            .background(DLMColors.dlmGradient)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
                 }
                 
                 Button(action: {
