@@ -16,6 +16,23 @@ class ChatViewModel {
     
     var manualCommand = ""
     
+    init(deepgram: DeepgramService? = nil, promptTap: RawDataTap? = nil, processingSteps: [ProcessingStep] = [], manualCommand: String = "") {
+        self.deepgram = deepgram
+        self.promptTap = promptTap
+        self.processingSteps = processingSteps
+        self.manualCommand = manualCommand
+        
+        guard let input = audioEngine.input else {
+            print("No input!")
+            return
+        }
+        
+        silencer.addInput(input)
+        silencer.volume = 0
+        audioEngine.output = silencer
+        
+    }
+    
     func setupDeepgramHandlers() {
         
         guard let deepgram else {
@@ -59,10 +76,7 @@ class ChatViewModel {
             print("No input!")
             return
         }
-        
-        silencer.addInput(input)
-        silencer.volume = 0
-        audioEngine.output = silencer
+
         
         do {
             try audioEngine.start()
