@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-public struct DLMView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
+public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
     
     @State var model = DLMViewModel()
     
