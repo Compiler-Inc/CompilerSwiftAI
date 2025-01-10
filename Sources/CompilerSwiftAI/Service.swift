@@ -3,13 +3,13 @@
 import Foundation
 
 // Response model
-public struct DLMCommand<Args>: Decodable, Sendable where Args: Decodable & Sendable {
+public struct Command<Args>: Decodable, Sendable where Args: Decodable & Sendable {
     public let command: String
     public let args: Args?
 }
 
 // Request model
-struct DLMRequest<State>: Encodable, Sendable where State: Encodable & Sendable {
+struct Request<State>: Encodable, Sendable where State: Encodable & Sendable {
     let id: String
     let prompt: String
     let current_state: State
@@ -26,7 +26,7 @@ public final actor Service {
         self.appId = appId
     }
 
-    public func processCommand<State: Encodable & Sendable, Args: Decodable & Sendable>(_ content: String, for state: State) async throws -> [DLMCommand<Args>] {
+    public func processCommand<State: Encodable & Sendable, Args: Decodable & Sendable>(_ content: String, for state: State) async throws -> [Command<Args>] {
         print("🚀 Starting processCommand with content: \(content)")
 
         guard let url = URL(string: baseURL) else {
@@ -35,7 +35,7 @@ public final actor Service {
         }
         print("✅ URL created: \(url)")
 
-        let request = DLMRequest(
+        let request = Request(
             id: appId,
             prompt: content,
             current_state: state
@@ -67,7 +67,7 @@ public final actor Service {
 
         print("Attempting to decode: \(String(data: data, encoding: .utf8) ?? "nil")")
         do {
-            let commands = try JSONDecoder().decode([DLMCommand<Args>].self, from: data)
+            let commands = try JSONDecoder().decode([Command<Args>].self, from: data)
             print("✅ Decoded response: \(commands)")
             return commands
         } catch {

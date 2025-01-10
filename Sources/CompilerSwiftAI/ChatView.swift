@@ -9,10 +9,10 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
     var state: AppState
     var dlm: Service
     var deepgram: DeepgramService?
-    var describe: (DLMCommand<Args>) -> String
-    var execute: (DLMCommand<Args>) -> ()
+    var describe: (Command<Args>) -> String
+    var execute: (Command<Args>) -> ()
     
-    public init(state: AppState, dlm: Service, deepgram: DeepgramService? = nil, describe: @escaping (DLMCommand<Args>) -> String, execute: @escaping (DLMCommand<Args>) -> ()) {
+    public init(state: AppState, dlm: Service, deepgram: DeepgramService? = nil, describe: @escaping (Command<Args>) -> String, execute: @escaping (Command<Args>) -> ()) {
         self.state = state
         self.dlm = dlm
         self.deepgram = deepgram
@@ -23,7 +23,7 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
     func process(prompt: String) {
         Task {
             model.addStep("Sending request to Compiler")
-            guard let commands: [DLMCommand<Args>] = try? await dlm.processCommand(prompt, for: state) else { return }
+            guard let commands: [Command<Args>] = try? await dlm.processCommand(prompt, for: state) else { return }
             model.completeLastStep()
             
             for command in commands {
