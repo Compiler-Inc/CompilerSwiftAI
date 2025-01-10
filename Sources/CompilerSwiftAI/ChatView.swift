@@ -37,7 +37,7 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
     public var body: some View {
         VStack(spacing: 4) {
             DLMTextInputView(model: model, process: process)
-            DLMProcessingStepsView(steps: model.processingSteps)
+            ProcessingStepsView(steps: model.processingSteps)
         }
         .frame(minWidth: 200)
         .background(DLMColors.primary10)

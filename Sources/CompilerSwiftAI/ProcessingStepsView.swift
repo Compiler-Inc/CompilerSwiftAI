@@ -2,7 +2,7 @@
 
 import SwiftUI
 
-struct DLMProcessingStepsView: View {
+struct ProcessingStepsView: View {
     
     var steps: [ProcessingStep]
     
@@ -42,5 +42,5 @@ struct DLMProcessingStepsView: View {
 }
 
 #Preview {
-    DLMProcessingStepsView(steps: [])
+    ProcessingStepsView(steps: [])
 }
