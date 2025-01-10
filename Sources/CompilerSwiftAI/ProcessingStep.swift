@@ -2,7 +2,7 @@
 
 import Foundation
 
-public struct DLMProcessingStep: Identifiable, Hashable {
+public struct ProcessingStep: Identifiable, Hashable {
     
     public let id = UUID()
     public let text: String

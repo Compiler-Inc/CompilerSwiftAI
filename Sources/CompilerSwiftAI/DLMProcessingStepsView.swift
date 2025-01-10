@@ -4,7 +4,7 @@ import SwiftUI
 
 struct DLMProcessingStepsView: View {
     
-    var steps: [DLMProcessingStep]
+    var steps: [ProcessingStep]
     
     var body: some View {
         // Processing Steps Area
