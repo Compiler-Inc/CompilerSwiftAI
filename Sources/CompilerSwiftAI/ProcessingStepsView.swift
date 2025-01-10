@@ -9,11 +9,6 @@ struct ProcessingStepsView: View {
     var body: some View {
         // Processing Steps Area
         VStack(alignment: .leading, spacing: 4) {
-            if !steps.isEmpty {
-            Text("DLM Output")
-                .foregroundColor(DLMColors.primary75)
-                    .font(.caption)
-            }
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(steps) { step in
