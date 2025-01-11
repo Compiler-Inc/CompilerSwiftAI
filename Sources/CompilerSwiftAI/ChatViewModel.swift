@@ -27,6 +27,13 @@ class ChatViewModel {
             return
         }
         
+        do {
+            try Settings.setSession(category: .playAndRecord, with: [.defaultToSpeaker, .mixWithOthers])
+            try Settings.session.setActive(true)
+        } catch {
+            print("error setting session: \(error)")
+        }
+        
         silencer.addInput(input)
         silencer.volume = 0
         audioEngine.output = silencer
