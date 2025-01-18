@@ -2,6 +2,7 @@ import Speech
 import Foundation
 import Observation
 
+@MainActor
 @Observable
 class SpeechRecognitionService {
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
@@ -24,9 +25,8 @@ class SpeechRecognitionService {
                 case .authorized:
                     break
                 case .denied, .restricted, .notDetermined:
-                    break
-//                    self.onError?(NSError(domain: "", code: -1,
-//                        userInfo: [NSLocalizedDescriptionKey: "Speech recognition not authorized"]))
+                    self.onError?(NSError(domain: "", code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Speech recognition not authorized"]))
                 @unknown default:
                     break
                 }
@@ -39,10 +39,12 @@ class SpeechRecognitionService {
         recognitionTask?.cancel()
         recognitionTask = nil
         
+        #if !os(macOS)
         // Configure audio session
         let audioSession = AVAudioSession.sharedInstance()
         try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        #endif
         
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         
