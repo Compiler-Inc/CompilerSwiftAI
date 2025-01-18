@@ -5,17 +5,16 @@ import SwiftUI
 public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
     
     @State var model = ChatViewModel()
+    @State private var speechService = SpeechRecognitionService()
     
     var state: AppState
     var dlm: Service
-    var deepgram: DeepgramService?
     var describe: (Command<Args>) -> String
     var execute: (Command<Args>) -> ()
     
-    public init(state: AppState, dlm: Service, deepgram: DeepgramService? = nil, describe: @escaping (Command<Args>) -> String, execute: @escaping (Command<Args>) -> ()) {
+    public init(state: AppState, dlm: Service, describe: @escaping (Command<Args>) -> String, execute: @escaping (Command<Args>) -> ()) {
         self.state = state
         self.dlm = dlm
-        self.deepgram = deepgram
         self.describe = describe
         self.execute = execute
     }
@@ -42,8 +41,8 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
         .frame(minWidth: 200)
         .background(DLMColors.primary10)
         .onAppear {
-            model.deepgram = deepgram
-            model.setupDeepgramHandlers()
+            model.speechService = speechService
+            model.setupSpeechHandlers()
         }
     }
 }

@@ -1,117 +1,54 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-import Foundation
-import AudioKit
+import SwiftUI
 
 @MainActor
 @Observable
 class ChatViewModel {
-    
-    var deepgram: DeepgramService?
-    private let audioEngine = AudioEngine()
-    private var promptTap: RawDataTap?
-    private let silencer = Mixer()
-    
+    var inputText = ""
+    var isRecording = false
     var processingSteps: [ProcessingStep] = []
     
-    var manualCommand = ""
+    var speechService: SpeechRecognitionService?
     
-    init(deepgram: DeepgramService? = nil, promptTap: RawDataTap? = nil, processingSteps: [ProcessingStep] = [], manualCommand: String = "") {
-        self.deepgram = deepgram
-        self.promptTap = promptTap
-        self.processingSteps = processingSteps
-        self.manualCommand = manualCommand
-        
-        guard let input = audioEngine.input else {
-            print("No input!")
-            return
-        }
-        
-        do {
-            try Settings.setSession(category: .playAndRecord, with: [.defaultToSpeaker, .mixWithOthers])
-            try Settings.session.setActive(true)
-        } catch {
-            print("error setting session: \(error)")
-        }
-        
-        silencer.addInput(input)
-        silencer.volume = 0
-        audioEngine.output = silencer
-        
-    }
-    
-    func setupDeepgramHandlers() {
-        
-        guard let deepgram else {
-            return
-        }
-        
-        deepgram.onTranscriptReceived = { transcript in
+    func setupSpeechHandlers() {
+        speechService?.onTranscript = { [weak self] transcript in
             Task { @MainActor in
-                if !self.manualCommand.isEmpty {
-                    self.manualCommand += " "
-                }
-                self.manualCommand += transcript
+                self?.inputText = transcript
             }
         }
         
-        deepgram.onTranscriptionComplete = {
+        speechService?.onError = { [weak self] error in
             Task { @MainActor in
-                print("transcription complete")
+                print("Speech recognition error: \(error.localizedDescription)")
+                self?.isRecording = false
             }
         }
-    }
-    
-    public func addStep(_ text: String) {
-        processingSteps.append(ProcessingStep(text: text, isComplete: false))
-    }
-
-    public func completeLastStep() {
-        if let lastIndex = processingSteps.indices.last {
-            processingSteps[lastIndex].isComplete = true
+        
+        // Directly observe isRecording
+        if let service = speechService {
+            isRecording = service.isRecording
         }
     }
     
-    func startRealtimeTranscription() {
-        
-        guard let deepgram else {
-            print("No deepgram")
-            return
+    func toggleRecording() {
+        if isRecording {
+            speechService?.stopRecording()
+        } else {
+            try? speechService?.startRecording()
         }
-        
-        guard let input = audioEngine.input else {
-            print("No input!")
-            return
+        // Update our local isRecording state
+        if let service = speechService {
+            isRecording = service.isRecording
         }
-
-        
-        do {
-            try audioEngine.start()
-        } catch {
-            print("Error starting audio engine: \(error)")
-            return
-        }
-        
-        promptTap = RawDataTap(input, bufferSize: 4096) { buffer in
-            deepgram.sendAudioData(buffer)
-        }
-        promptTap?.start()
-        
-        // Start WebSocket connection
-        deepgram.startRealtimeTranscription()
     }
     
-    func stopRealtimeTranscription() {
-        
-        guard let deepgram else {
-            print("No deepgram")
-            return
-        }
-        
-        promptTap?.stop()
-        promptTap = nil
-        deepgram.stopRealtimeTranscription()
-        audioEngine.stop()
+    func addStep(_ description: String) {
+        processingSteps.append(ProcessingStep(text: description, isComplete: false))
     }
     
+    func completeLastStep() {
+        guard let index = processingSteps.indices.last else { return }
+        processingSteps[index].isComplete = true
+    }
 }

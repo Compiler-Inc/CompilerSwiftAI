@@ -8,7 +8,6 @@ struct TextInputView: View {
     var process: (String) -> ()
         
     var body: some View {
-        // Text Input Area
         VStack(spacing: 8) {
             Text("Prompt")
                 .foregroundStyle(DLMColors.primary75)
@@ -16,7 +15,7 @@ struct TextInputView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $model.manualCommand)
+                TextEditor(text: $model.inputText)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 8)
             }
@@ -28,28 +27,21 @@ struct TextInputView: View {
             .tint(DLMColors.primary100)
 
             HStack {
-                
-                if let deepgram = model.deepgram {
-                    Button {
-                        if deepgram.isListening {
-                            model.stopRealtimeTranscription()
-                        } else {
-                            model.startRealtimeTranscription()
-                        }
-                    } label: {
-                        Image(systemName: deepgram.isListening ? "microphone.fill" : "microphone")
-                            .padding(.vertical, 8)
-                            .frame(width: 40)
-                            .background(DLMColors.dlmGradient)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
+                Button {
+                    model.toggleRecording()
+                } label: {
+                    Image(systemName: model.isRecording ? "microphone.fill" : "microphone")
+                        .padding(.vertical, 8)
+                        .frame(width: 40)
+                        .background(DLMColors.dlmGradient)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
                 }
                 
                 Button(action: {
-                    model.stopRealtimeTranscription()
-                    process(model.manualCommand)
-                    model.manualCommand = ""
+                    model.speechService?.stopRecording()
+                    process(model.inputText)
+                    model.inputText = ""
                 }) {
                     HStack {
                         Text("Submit")
@@ -61,9 +53,8 @@ struct TextInputView: View {
                     .foregroundColor(.white)
                     .cornerRadius(8)
                 }
-                .disabled(model.manualCommand.isEmpty)
+                .disabled(model.inputText.isEmpty)
                 .buttonStyle(.plain)
-                
             }
         }
         .padding()
