@@ -25,8 +25,7 @@ class SpeechRecognitionService {
                 case .authorized:
                     break
                 case .denied, .restricted, .notDetermined:
-                    self.onError?(NSError(domain: "", code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Speech recognition not authorized"]))
+                    self.onError?(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Speech recognition not authorized"]))
                 @unknown default:
                     break
                 }
