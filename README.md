@@ -54,7 +54,7 @@ There are more things that you'll want to add to the CompilerFunction enum, but 
 
 ## Completing set up on the Developer Dashboard
 
-On the same page that you got your AppID you will see you available commands, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Command Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunciton` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
+On the same page that you got your AppID you will see you available commands, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Command Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunction` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
 
 ```
 static func from(_ command: Command<CommandArgs>) -> CompilerFunction? {
