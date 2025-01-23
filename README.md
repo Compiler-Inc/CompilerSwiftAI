@@ -48,7 +48,9 @@ enum CompilerFunction: Sendable {
 }
 ```
 
-Be as descriptive as you can be. It will definitely help.  You can limit strings to certain values
+Be as descriptive as you can be. It will definitely help.  You can limit strings to certain values, give ranges for numeric values, and provide variations of ways a user might word this function, different nomenclature that might be used for the same function or parameters.
+
+There are more things that you'll want to add to the CompilerFunction enum, but in the next step the dashboard will generate a template for the code you will add later.
 
 ## Completing set up on the Developer Dashboard
 
