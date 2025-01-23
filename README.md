@@ -54,14 +54,14 @@ There are more things that you'll want to add to the CompilerFunction enum, but 
 
 ## Completing set up on the Developer Dashboard
 
-On the same page that you got your AppID you will see you available commands, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Command Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunction` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
+On the same page that you got your AppID you will see you available functions, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Function Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunction` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
 
 ```
-static func from(_ command: Command<CommandArgs>) -> CompilerFunction? {
+static func from(_ function: Function<Parameter>) -> CompilerFunction? {
     ...
 }
 
-func describe(command: Command<CommandArgs>) -> String {
+func describe(function: Function<Parameter>) -> String {
     ...
 }
 ```
@@ -77,8 +77,8 @@ Somewhere in your SwiftUI app, add the `ChatView` SwiftUI view:
 ```
  ChatView(state: CurrentState(bpm: metronome.tempo),
                     dlm: dlm,
-                    describe: describe(command:),
-                    execute: execute(command:))
+                    describe: describe(function:),
+                    execute: execute(function:))
 ```
 
 The `describe` function was already created for you.  The execute function is where you finally perform the actions that were requested. 
