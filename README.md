@@ -4,7 +4,7 @@ Swift Package for Compiler Inc's AI Backend API
 
 ## Getting started
 
-Login to the [Compiler Developper Dshboard](https://developer.compiler.inc/) and choose "Create a new app".  Give it a name and description and you will be given an API key. Save that API key, this is the only time it will be shown to you. 
+Login to the [Compiler Developer Dshboard](https://developer.compiler.inc/) and choose "Create a new app".  Give it a name and description and you will be given an API key. Save that API key, this is the only time it will be shown to you. 
 
 On the next page you will see an app ID. You will use that in your code and set up functions for use with Compiler inside your own project next.
 
