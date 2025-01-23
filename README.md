@@ -28,7 +28,7 @@ enum CompilerFunction: Sendable {
 }
 ```
 
-Note that parameters supported are: `String`, `Double`, `Float`, `Int`, and other simple numeric types.
+Note that parameters supported are: `String`, `Double`, `Float`, `Int`, `Bool`, `Array` and `Dictionary`.
 
 But, you'll want to add tradtional Swift-style documentation generating comments as well, because these will be use in a later step to help train the AI to best respond to your users. For instance:
 
@@ -69,5 +69,22 @@ func describe(command: Command<CommandArgs>) -> String {
 Update the `from` commend to perform the necessary actions in your app.
 
 Update `describe` with words that describe the actions. This will be used in the UI widget to give the user feedback that the apopropriate actions were taken.
+
+## Implement Compiler's `ChatView` in your app
+
+Somewhere in your SwiftUI app, add the `ChatView` SwiftUI view:
+
+```
+ ChatView(state: CurrentState(bpm: metronome.tempo),
+                    dlm: dlm,
+                    describe: describe(command:),
+                    execute: execute(command:))
+```
+
+The `describe` function was already created for you.  The execute function is where you finally perform the actions that were requested. 
+
+
+
+
 
     
