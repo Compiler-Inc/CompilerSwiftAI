@@ -3,16 +3,16 @@
 import Foundation
 
 // Response model
-public struct Command<Args>: Decodable, Sendable where Args: Decodable & Sendable {
-    public let command: String
-    public let args: Args?
+public struct Function<Parameters>: Decodable, Sendable where Parameters: Decodable & Sendable {
+    public let function: String
+    public let parameters: Parameters?
 }
 
 // Request model
 struct Request<State>: Encodable, Sendable where State: Encodable & Sendable {
     let id: String
     let prompt: String
-    let current_state: State
+    let state: State
 }
 
 public final actor Service {
@@ -26,8 +26,8 @@ public final actor Service {
         self.appId = appId
     }
 
-    public func processCommand<State: Encodable & Sendable, Args: Decodable & Sendable>(_ content: String, for state: State) async throws -> [Command<Args>] {
-        print("🚀 Starting processCommand with content: \(content)")
+    public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ content: String, for state: State) async throws -> [Function<Parameters>] {
+        print("🚀 Starting processFunction with content: \(content)")
 
         guard let url = URL(string: baseURL) else {
             print("❌ Invalid URL: \(baseURL)")
@@ -38,7 +38,7 @@ public final actor Service {
         let request = Request(
             id: appId,
             prompt: content,
-            current_state: state
+            state: state
         )
 
         var urlRequest = URLRequest(url: url)
@@ -67,9 +67,9 @@ public final actor Service {
 
         print("Attempting to decode: \(String(data: data, encoding: .utf8) ?? "nil")")
         do {
-            let commands = try JSONDecoder().decode([Command<Args>].self, from: data)
-            print("✅ Decoded response: \(commands)")
-            return commands
+            let functions = try JSONDecoder().decode([Function<Parameters>].self, from: data)
+            print("✅ Decoded response: \(functions)")
+            return functions
         } catch {
             print("❌ Decoding error: \(error)")
             throw error

@@ -2,19 +2,19 @@
 
 import SwiftUI
 
-public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendable>: View {
+public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
     
     @State var model = ChatViewModel()
     @State private var speechService = SpeechRecognitionService()
     
     var state: AppState
-    var dlm: Service
-    var describe: (Command<Args>) -> String
-    var execute: (Command<Args>) -> ()
+    var service: Service
+    var describe: (Function<Parameters>) -> String
+    var execute: (Function<Parameters>) -> ()
     
-    public init(state: AppState, dlm: Service, describe: @escaping (Command<Args>) -> String, execute: @escaping (Command<Args>) -> ()) {
+    public init(state: AppState, service: Service, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> ()) {
         self.state = state
-        self.dlm = dlm
+        self.service = service
         self.describe = describe
         self.execute = execute
     }
@@ -22,12 +22,12 @@ public struct ChatView<AppState: Encodable & Sendable, Args: Decodable & Sendabl
     func process(prompt: String) {
         Task {
             model.addStep("Sending request to Compiler")
-            guard let commands: [Command<Args>] = try? await dlm.processCommand(prompt, for: state) else { return }
+            guard let functions: [Function<Parameters>] = try? await service.processFunction(prompt, for: state) else { return }
             model.completeLastStep()
             
-            for command in commands {
-                model.addStep(describe(command))
-                execute(command)
+            for function in functions {
+                model.addStep(describe(function))
+                execute(function)
                 model.completeLastStep()
             }
         }
