@@ -4,8 +4,13 @@ import Foundation
 
 // Response model
 public struct Function<Parameters>: Decodable, Sendable where Parameters: Decodable & Sendable {
-    public let function: String
+    public let name: String
     public let parameters: Parameters?
+    
+    private enum CodingKeys: String, CodingKey {
+        case name = "function"
+        case parameters
+    }
 }
 
 // Request model
