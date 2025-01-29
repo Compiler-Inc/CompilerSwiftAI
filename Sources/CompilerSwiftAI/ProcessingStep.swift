@@ -3,11 +3,10 @@
 import Foundation
 
 public struct ProcessingStep: Identifiable, Hashable {
-    
     public let id = UUID()
     public let text: String
     public var isComplete: Bool
-    
+
     public init(text: String, isComplete: Bool) {
         self.text = text
         self.isComplete = isComplete

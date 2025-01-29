@@ -3,28 +3,27 @@
 import SwiftUI
 
 public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
-    
     @State var model = ChatViewModel()
     @State private var speechService = SpeechRecognitionService()
-    
+
     var state: AppState
     var service: Service
     var describe: (Function<Parameters>) -> String
-    var execute: (Function<Parameters>) -> ()
-    
-    public init(state: AppState, service: Service, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> ()) {
+    var execute: (Function<Parameters>) -> Void
+
+    public init(state: AppState, service: Service, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
         self.state = state
         self.service = service
         self.describe = describe
         self.execute = execute
     }
-    
+
     func process(prompt: String) {
         Task {
             model.addStep("Sending request to Compiler")
             guard let functions: [Function<Parameters>] = try? await service.processFunction(prompt, for: state) else { return }
             model.completeLastStep()
-            
+
             for function in functions {
                 model.addStep(describe(function))
                 execute(function)

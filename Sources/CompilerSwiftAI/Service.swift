@@ -6,7 +6,7 @@ import Foundation
 public struct Function<Parameters>: Decodable, Sendable where Parameters: Decodable & Sendable {
     public let name: String
     public let parameters: Parameters?
-    
+
     private enum CodingKeys: String, CodingKey {
         case name = "function"
         case parameters
@@ -80,5 +80,4 @@ public final actor Service {
             throw error
         }
     }
-
 }

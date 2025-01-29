@@ -3,9 +3,8 @@
 import SwiftUI
 
 struct ProcessingStepsView: View {
-    
     var steps: [ProcessingStep]
-    
+
     var body: some View {
         // Processing Steps Area
         VStack(alignment: .leading, spacing: 4) {
