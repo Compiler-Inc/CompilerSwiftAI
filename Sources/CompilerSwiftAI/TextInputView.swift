@@ -3,10 +3,9 @@
 import SwiftUI
 
 struct TextInputView: View {
-    
     @Bindable var model: ChatViewModel
-    var process: (String) -> ()
-        
+    var process: (String) -> Void
+
     var body: some View {
         VStack(spacing: 8) {
             Text("Prompt")
@@ -16,8 +15,8 @@ struct TextInputView: View {
 
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $model.inputText)
-                .padding(.horizontal, 4)
-                .padding(.vertical, 8)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
             }
             .frame(height: 100)
             .foregroundStyle(DLMColors.primary100)
@@ -37,7 +36,7 @@ struct TextInputView: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                
+
                 Button(action: {
                     model.speechService?.stopRecording()
                     process(model.inputText)
