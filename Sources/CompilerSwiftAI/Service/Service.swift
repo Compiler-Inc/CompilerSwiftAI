@@ -1,6 +1,7 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
 import Foundation
+import AuthenticationServices
 
 public final actor Service {
     //private let baseURL = "https://backend.compiler.inc/function-call"
@@ -171,5 +172,42 @@ public final actor Service {
         print("✅ Successfully got access token")
         
         return authResponse.access_token
+    }
+    
+    public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
+        switch result {
+        case .success(let auth):
+            guard let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
+                  let idTokenData = appleIDCredential.identityToken,
+                  let idToken = String(data: idTokenData, encoding: .utf8) else {
+                throw AuthError.invalidIdToken
+            }
+            let accessToken = try await authenticateWithServer(idToken: idToken)
+            
+            // Store token securely
+            await KeychainHelper.standard.save(accessToken, service: "access-token", account: "user")
+            return true
+            
+        case .failure(let error):
+            throw AuthError.networkError(error)
+        }
+        
+    }
+    
+    private func handleError(_ error: Error) -> String {
+        switch error {
+        case AuthError.invalidIdToken:
+            return "Failed to get Apple ID token"
+        case AuthError.networkError(let underlying):
+            return "Network error: \(underlying.localizedDescription)"
+        case AuthError.invalidResponse:
+            return "Invalid server response"
+        case AuthError.serverError(let message):
+            return "Server error: \(message)"
+        case AuthError.decodingError:
+            return "Failed to process server response"
+        default:
+            return "An unexpected error occurred"
+        }
     }
 }
