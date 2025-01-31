@@ -21,7 +21,7 @@ public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & S
     func process(prompt: String) {
         Task {
             model.addStep("Sending request to Compiler")
-            guard let functions: [Function<Parameters>] = try? await service.processFunction(prompt, for: state) else { return }
+            guard let functions: [Function<Parameters>] = try? await service.processFunction(prompt, for: state, using: "") else { return }
             model.completeLastStep()
 
             for function in functions {
