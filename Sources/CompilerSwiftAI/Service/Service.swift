@@ -3,8 +3,9 @@
 import Foundation
 
 public final actor Service {
-    private let baseURL = "https://backend.compiler.inc/function-call"
-
+    //private let baseURL = "https://backend.compiler.inc/function-call"
+    //private let baseURL = "https://backend.compiler.inc/"
+    private let baseURL = "http://localhost:3000"
     let appId: UUID
 
     public init(appId: UUID) {
