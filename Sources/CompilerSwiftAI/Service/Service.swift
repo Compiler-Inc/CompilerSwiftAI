@@ -3,14 +3,20 @@
 import Foundation
 import AuthenticationServices
 
-public final actor Service {
+public protocol TokenManaging: Actor {
+    func getValidToken() async throws -> String
+}
+
+public final actor Service: TokenManaging {
     //private let baseURL = "https://backend.compiler.inc/function-call"
     //private let baseURL = "https://backend.compiler.inc/"
     private let baseURL = "http://localhost:3000"
     let appId: UUID
+    private let keychain: any KeychainManaging
 
-    public init(appId: UUID) {
+    public init(appId: UUID, keychain: any KeychainManaging = KeychainHelper.standard) {
         self.appId = appId
+        self.keychain = keychain
     }
 
     public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ content: String, for state: State, using token: String) async throws -> [Function<Parameters>] {
@@ -63,8 +69,22 @@ public final actor Service {
         }
     }
     
-    public func makeModelCall(token: String) async {
-        
+    public func getValidToken() async throws -> String {
+        // First try to get the stored apple id token
+           if let appleIdToken = await keychain.read(service: "apple-id-token", account: "user") {
+            do {
+                // Try to refresh the token
+                let newToken = try await authenticateWithServer(idToken: appleIdToken)
+                await keychain.save(newToken, service: "access-token", account: "user")
+                return newToken
+            } catch {
+                throw error
+            }
+        }
+        throw AuthError.invalidIdToken
+    }
+
+    public func makeModelCall() async {
         do {
             let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call"
             guard let url = URL(string: endpoint) else { return }
@@ -74,6 +94,9 @@ public final actor Service {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            // Get a fresh token
+            let token = try await getValidToken()
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             
             let body = ModelCallRequest(
@@ -144,11 +167,7 @@ public final actor Service {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Include the bundle ID in the request
-        let body = AppleAuthRequest(
-            id_token: idToken,
-            bundle_id: Bundle.main.bundleIdentifier ?? ""
-        )
+        let body = AppleAuthRequest(idToken: idToken)
         request.httpBody = try JSONEncoder().encode(body)
         
         print("📤 Request body: \(body)")
@@ -164,14 +183,20 @@ public final actor Service {
             print("📥 Response body: \(responseString)")
         }
         
-        guard 200...299 ~= httpResponse.statusCode else {
+        switch httpResponse.statusCode {
+        case 200...299:
+            let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
+            print("✅ Successfully got access token")
+            return authResponse.access_token
+        case 400:
+            throw AuthError.serverError("Bundle ID mismatch or SIWA not enabled")
+        case 401:
+            throw AuthError.serverError("Invalid or expired Apple token")
+        case 500:
+            throw AuthError.serverError("Server encryption/decryption issues")
+        default:
             throw AuthError.serverError("Server returned status code \(httpResponse.statusCode)")
         }
-        
-        let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
-        print("✅ Successfully got access token")
-        
-        return authResponse.access_token
     }
     
     public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
@@ -182,16 +207,18 @@ public final actor Service {
                   let idToken = String(data: idTokenData, encoding: .utf8) else {
                 throw AuthError.invalidIdToken
             }
-            let accessToken = try await authenticateWithServer(idToken: idToken)
             
-            // Store token securely
-            await KeychainHelper.standard.save(accessToken, service: "access-token", account: "user")
+            // Store Apple ID token for refresh
+            await keychain.save(idToken, service: "apple-id-token", account: "user")
+            
+            let accessToken = try await authenticateWithServer(idToken: idToken)
+            await keychain.save(accessToken, service: "access-token", account: "user")
+            
             return true
             
         case .failure(let error):
             throw AuthError.networkError(error)
         }
-        
     }
     
     private func handleError(_ error: Error) -> String {
