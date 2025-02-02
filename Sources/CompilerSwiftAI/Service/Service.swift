@@ -199,6 +199,22 @@ public final actor Service: TokenManaging {
         }
     }
     
+    public func attemptAutoLogin() async throws -> Bool {
+        if let storedAppleIdToken = await keychain.read(service: "apple-id-token", account: "user") {
+            do {
+                let accessToken = try await authenticateWithServer(idToken: storedAppleIdToken)
+                await keychain.save(accessToken, service: "access-token", account: "user")
+                return true
+            } catch AuthError.serverError("Invalid or expired Apple token") {
+                // Apple ID token expired, need fresh sign in
+                return false
+            } catch {
+                throw error
+            }
+        }
+        return false
+    }
+
     public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
         switch result {
         case .success(let auth):
@@ -208,7 +224,8 @@ public final actor Service: TokenManaging {
                 throw AuthError.invalidIdToken
             }
             
-            // Store Apple ID token for refresh
+            // Store Apple ID token - this acts as our "refresh token"
+            // Apple ID tokens can be reused for a while (usually days to weeks)
             await keychain.save(idToken, service: "apple-id-token", account: "user")
             
             let accessToken = try await authenticateWithServer(idToken: idToken)
