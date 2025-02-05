@@ -38,6 +38,9 @@ public final actor Service: TokenManaging {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Get a fresh token
+        let token = try await getValidToken()
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 
         let encoder = JSONEncoder()
