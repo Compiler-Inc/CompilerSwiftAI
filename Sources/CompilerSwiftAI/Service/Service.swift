@@ -8,9 +8,8 @@ public protocol TokenManaging: Actor {
 }
 
 public final actor Service: TokenManaging {
-    //private let baseURL = "https://backend.compiler.inc/function-call"
-    //private let baseURL = "https://backend.compiler.inc/"
-    private let baseURL = "http://localhost:3000"
+    private let baseURL = "https://backend.compiler.inc/"
+    
     let appId: UUID
     private let keychain: any KeychainManaging
 
@@ -22,7 +21,9 @@ public final actor Service: TokenManaging {
     public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ content: String, for state: State, using token: String) async throws -> [Function<Parameters>] {
         print("🚀 Starting processFunction with content: \(content)")
 
-        guard let url = URL(string: baseURL) else {
+        let endpoint = "\(baseURL)/v1/function-call/\(appId.uuidString)"
+        
+        guard let url = URL(string: endpoint) else {
             print("❌ Invalid URL: \(baseURL)")
             throw URLError(.badURL)
         }
