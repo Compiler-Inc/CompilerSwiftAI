@@ -8,7 +8,7 @@ public protocol TokenManaging: Actor {
 }
 
 public final actor Service: TokenManaging {
-    private let baseURL = "https://backend.compiler.inc/"
+    private let baseURL = "https://backend.compiler.inc"
     
     let appId: UUID
     private let keychain: any KeychainManaging
