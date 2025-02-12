@@ -8,8 +8,8 @@ public protocol TokenManaging: Actor {
 }
 
 public final actor Service: TokenManaging {
-    private let baseURL = "https://backend.compiler.inc"
-    
+    // private let baseURL: String = "https://backend.compiler.inc"
+    private let baseURL: String = "http://localhost:3000"
     let appId: UUID
     private let keychain: any KeychainManaging
 
@@ -88,73 +88,234 @@ public final actor Service: TokenManaging {
         throw AuthError.invalidIdToken
     }
 
-    public func makeModelCall() async {
-        do {
-            let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call"
-            guard let url = URL(string: endpoint) else { return }
-            
-            print("🤖 Making model call to: \(endpoint)")
-            
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
-            // Get a fresh token
-            let token = try await getValidToken()
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            
-            let body = ModelCallRequest(
-                systemPrompt: "You are a helpful assistant",
-                userPrompt: "Hello!",
-                provider: .openai,
-                model: OpenAIModels.gpt4oMini.rawValue
-            )
-            
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            let jsonData = try encoder.encode(body)
-            
-            print("📤 Request body:")
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print(jsonString)
-            }
-            
-            request.httpBody = jsonData
-            
-            print("🔑 Using token: \(token)")
-            
-            let (data, response) = try await URLSession.shared.data(for: request)
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw AuthError.invalidResponse
-            }
-            
-            print("📥 Response status: \(httpResponse.statusCode)")
-            print("📥 Response headers: \(httpResponse.allHeaderFields)")
-            
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("📥 Raw response data: \(responseString)")
-            }
-            
-            guard 200...299 ~= httpResponse.statusCode else {
-                throw AuthError.serverError("Model call failed with status \(httpResponse.statusCode)")
-            }
-            
-            do {
-                let modelResponse = try JSONDecoder().decode(ModelCallResponse.self, from: data)
-                print("✅ Successfully decoded response: \(modelResponse)")
-                // Just use the content as our response
-//                await MainActor.run { self.modelResponse = modelResponse.content }
-            } catch {
-                // If decoding fails, just show the raw response
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("📥 Using raw response: \(responseString)")
-//                    await MainActor.run { self.modelResponse = responseString }
+    // Default String response version
+    public func makeModelCall(
+        systemPrompt: String,
+        userPrompt: String,
+        using metadata: ModelMetadata,
+        state: (any Codable & Sendable)? = nil
+    ) async throws -> String {
+        let response: ModelCallResponse<String> = try await makeModelCallWithResponse(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            using: metadata,
+            state: state
+        )
+        return response.content
+    }
+    
+    // Generic version for custom response types
+    public func makeModelCallWithResponse<Response: Codable & Sendable>(
+        systemPrompt: String,
+        userPrompt: String,
+        using metadata: ModelMetadata,
+        state: (any Codable & Sendable)? = nil
+    ) async throws -> ModelCallResponse<Response> {
+        let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call"
+        guard let url = URL(string: endpoint) else { 
+            throw URLError(.badURL)
+        }
+        
+        print("🤖 Making model call to: \(endpoint)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let token = try await getValidToken()
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        // Append state info to userPrompt if available
+        let finalUserPrompt: String
+        if let state = state {
+            finalUserPrompt = "\(userPrompt)\n\nThe current app state is: \(state)"
+        } else {
+            finalUserPrompt = userPrompt
+        }
+        
+        let body = ModelCallRequest(
+            systemPrompt: systemPrompt,
+            userPrompt: finalUserPrompt,
+            provider: metadata.provider,
+            model: metadata.id
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        let jsonData = try encoder.encode(body)
+        request.httpBody = jsonData
+        
+        print("📤 Request body:")
+        if let jsonString = String(data: jsonData, encoding: .utf8) {
+            print(jsonString)
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AuthError.invalidResponse
+        }
+        
+        print("📥 Response status: \(httpResponse.statusCode)")
+        print("📥 Response headers: \(httpResponse.allHeaderFields)")
+        
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("📥 Raw response data: \(responseString)")
+        }
+        
+        guard 200...299 ~= httpResponse.statusCode else {
+            throw AuthError.serverError("Model call failed with status \(httpResponse.statusCode)")
+        }
+        
+        return try JSONDecoder().decode(ModelCallResponse<Response>.self, from: data)
+    }
+    
+    // Backend streaming chunk format
+    private struct StreamChunk: Codable {
+        let data: String
+    }
+    
+    // Specialized String streaming version
+    public func makeStreamingModelCall(
+        systemPrompt: String,
+        userPrompt: String,
+        using metadata: ModelMetadata,
+        state: (any Codable & Sendable)? = nil
+    ) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let stream = makeStreamingModelCallWithResponse(
+                        systemPrompt: systemPrompt,
+                        userPrompt: userPrompt,
+                        using: metadata,
+                        state: state
+                    )
+                    
+                    var buffer = ""
+                    var lastCharWasSpace = true // Track if we just emitted a space
+                    
+                    for try await chunk in stream {
+                        let text = chunk.data.precomposedStringWithCanonicalMapping
+                        
+                        // If this chunk starts with a letter and the last char wasn't a space,
+                        // we probably need a space
+                        if !lastCharWasSpace && !text.isEmpty && text.first?.isLetter == true {
+                            buffer += " "
+                        }
+                        
+                        buffer += text
+                        
+                        // If we hit certain boundaries, emit the buffer
+                        if text.contains(where: { $0.isWhitespace || $0.isPunctuation }) {
+                            continuation.yield(buffer)
+                            buffer = ""
+                            lastCharWasSpace = text.last?.isWhitespace == true
+                        } else if buffer.count > 30 {
+                            // If buffer is getting long, emit it
+                            continuation.yield(buffer)
+                            buffer = ""
+                            lastCharWasSpace = false
+                        }
+                    }
+                    
+                    // Emit any remaining text
+                    if !buffer.isEmpty {
+                        continuation.yield(buffer)
+                    }
+                    
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
                 }
             }
+        }
+    }
+    
+    private func makeStreamingModelCallWithResponse(
+        systemPrompt: String,
+        userPrompt: String,
+        using metadata: ModelMetadata,
+        state: (any Codable & Sendable)? = nil
+    ) -> AsyncThrowingStream<StreamChunk, Error> {
+        // Verify provider supports streaming
+        guard metadata.provider == .openai || metadata.provider == .anthropic else {
+            return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only OpenAI and Anthropic support streaming")) }
+        }
+        
+        // Prepare all the non-async parts of the request before the Task
+        let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call/stream"
+        guard let url = URL(string: endpoint) else {
+            return AsyncThrowingStream { $0.finish(throwing: URLError(.badURL)) }
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        
+        let finalUserPrompt: String
+        if let state = state {
+            finalUserPrompt = "\(userPrompt)\n\nThe current app state is: \(state)"
+        } else {
+            finalUserPrompt = userPrompt
+        }
+        
+        let body = ModelCallRequest(
+            systemPrompt: systemPrompt,
+            userPrompt: finalUserPrompt,
+            provider: metadata.provider,
+            model: metadata.id
+        )
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            request.httpBody = try encoder.encode(body)
         } catch {
-            print("❌ Error: \(error)")
-//            await MainActor.run { self.errorMessage = error.localizedDescription }
+            return AsyncThrowingStream { $0.finish(throwing: error) }
+        }
+        
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let token = try await getValidToken()
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                    
+                    let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
+                    
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        throw AuthError.invalidResponse
+                    }
+                    
+                    guard 200...299 ~= httpResponse.statusCode else {
+                        throw AuthError.serverError("Streaming model call failed with status \(httpResponse.statusCode)")
+                    }
+                    
+                    for try await line in asyncBytes.lines {
+                        // Skip empty lines
+                        guard !line.isEmpty else { continue }
+                        
+                        print("📝 Raw line: \(line)")
+                        
+                        if line.hasPrefix("data:") {
+                            // Extract everything after "data:" and trim whitespace
+                            let content = String(line.dropFirst("data:".count)).trimmingCharacters(in: .whitespaces)
+                            print("📄 Content: \(content)")
+                            
+                            // Skip empty content
+                            guard !content.isEmpty else { continue }
+                            
+                            continuation.yield(StreamChunk(data: content))
+                        }
+                        // Ignore other event types (id, etc)
+                    }
+                    
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
         }
     }
     
