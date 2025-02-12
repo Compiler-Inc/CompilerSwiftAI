@@ -192,36 +192,9 @@ public final actor Service: TokenManaging {
                         state: state
                     )
                     
-                    var buffer = ""
-                    var lastCharWasSpace = true // Track if we just emitted a space
-                    
                     for try await chunk in stream {
-                        let text = chunk.data.precomposedStringWithCanonicalMapping
-                        
-                        // If this chunk starts with a letter and the last char wasn't a space,
-                        // we probably need a space
-                        if !lastCharWasSpace && !text.isEmpty && text.first?.isLetter == true {
-                            buffer += " "
-                        }
-                        
-                        buffer += text
-                        
-                        // If we hit certain boundaries, emit the buffer
-                        if text.contains(where: { $0.isWhitespace || $0.isPunctuation }) {
-                            continuation.yield(buffer)
-                            buffer = ""
-                            lastCharWasSpace = text.last?.isWhitespace == true
-                        } else if buffer.count > 30 {
-                            // If buffer is getting long, emit it
-                            continuation.yield(buffer)
-                            buffer = ""
-                            lastCharWasSpace = false
-                        }
-                    }
-                    
-                    // Emit any remaining text
-                    if !buffer.isEmpty {
-                        continuation.yield(buffer)
+                        print("🔄 Streaming chunk: '\(chunk.data)'")
+                        continuation.yield(chunk.data)
                     }
                     
                     continuation.finish()
@@ -296,19 +269,24 @@ public final actor Service: TokenManaging {
                         // Skip empty lines
                         guard !line.isEmpty else { continue }
                         
-                        print("📝 Raw line: \(line)")
+                        print("📡 Raw SSE line: '\(line)'")  // Show exact line with quotes
                         
                         if line.hasPrefix("data:") {
-                            // Extract everything after "data:" and trim whitespace
-                            let content = String(line.dropFirst("data:".count)).trimmingCharacters(in: .whitespaces)
-                            print("📄 Content: \(content)")
+                            // Extract just the content after "data:" prefix
+                            let content = String(line.dropFirst("data:".count))
+                            print("📥 After prefix removal: '\(content)'")
                             
                             // Skip empty content
-                            guard !content.isEmpty else { continue }
+                            guard !content.isEmpty else {
+                                print("⏭️ Skipping empty content")
+                                continue
+                            }
                             
+                            print("📤 Yielding content: '\(content)'")
                             continuation.yield(StreamChunk(data: content))
+                        } else {
+                            print("⏭️ Skipping non-data line: '\(line)'")
                         }
-                        // Ignore other event types (id, etc)
                     }
                     
                     continuation.finish()
