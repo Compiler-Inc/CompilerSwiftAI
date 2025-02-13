@@ -2,34 +2,74 @@
 
 import Foundation
 import AuthenticationServices
-import os
+import OSLog
+
+extension Logger {
+    private static let subsystem = "CompilerSwiftAI"
+    
+    /// Logs related to function calling and processing
+    static let functionCalls = Logger(subsystem: subsystem, category: "functionCalls")
+    
+    /// Logs related to model calls, streaming, and responses
+    static let modelCalls = Logger(subsystem: subsystem, category: "modelCalls")
+    
+    /// Logs related to authentication and token management
+    static let auth = Logger(subsystem: subsystem, category: "auth")
+}
+
+/// A wrapper around Logger that handles debug mode checks
+private struct DebugLogger {
+    private let logger: Logger
+    private let isEnabled: Bool
+    
+    init(_ logger: Logger, isEnabled: Bool) {
+        self.logger = logger
+        self.isEnabled = isEnabled
+    }
+    
+    func debug(_ message: @escaping @autoclosure () -> String) {
+        guard isEnabled else { return }
+        logger.debug("\(message())")
+    }
+    
+    func error(_ message: @escaping @autoclosure () -> String) {
+        // Always log errors, regardless of debug mode
+        logger.error("\(message())")
+    }
+}
 
 public protocol TokenManaging: Actor {
     func getValidToken() async throws -> String
 }
-
 
 public final actor Service: TokenManaging {
     // private let baseURL: String = "https://backend.compiler.inc"
     private let baseURL: String = "http://localhost:3000"
     let appId: UUID
     private let keychain: any KeychainManaging
+    private let functionLogger: DebugLogger
+    private let modelLogger: DebugLogger
+    private let authLogger: DebugLogger
 
-    public init(appId: UUID, keychain: any KeychainManaging = KeychainHelper.standard) {
+    public init(appId: UUID, keychain: any KeychainManaging = KeychainHelper.standard, enableDebugLogging: Bool = false) {
         self.appId = appId
         self.keychain = keychain
+        self.functionLogger = DebugLogger(Logger.functionCalls, isEnabled: enableDebugLogging)
+        self.modelLogger = DebugLogger(Logger.modelCalls, isEnabled: enableDebugLogging)
+        self.authLogger = DebugLogger(Logger.auth, isEnabled: enableDebugLogging)
     }
 
     public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ content: String, for state: State, using token: String) async throws -> [Function<Parameters>] {
-        print("🚀 Starting processFunction with content: \(content)")
+        functionLogger.debug("Starting processFunction with content: \(content)")
 
         let endpoint = "\(baseURL)/v1/function-call/\(appId.uuidString)"
         
         guard let url = URL(string: endpoint) else {
-            print("❌ Invalid URL: \(baseURL)")
+            functionLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
-        print("✅ URL created: \(url)")
+        
+        functionLogger.debug("URL created: \(url)")
 
         let request = Request(
             id: appId.uuidString,
@@ -50,27 +90,24 @@ public final actor Service: TokenManaging {
         let jsonData = try encoder.encode(request)
         urlRequest.httpBody = jsonData
 
-        print("📤 Request Headers:", urlRequest.allHTTPHeaderFields ?? [:])
-        print("📦 Request Body:", String(data: jsonData, encoding: .utf8) ?? "nil")
-
-        print("⏳ Starting network request...")
+        functionLogger.debug("Request Headers: \(urlRequest.allHTTPHeaderFields ?? [:])")
+        functionLogger.debug("Request Body: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
+        functionLogger.debug("Starting network request...")
 
         let (data, response) = try await URLSession.shared.data(for: urlRequest)
 
-        print("📥 Response received")
         if let httpResponse = response as? HTTPURLResponse {
-            print("📊 Status code: \(httpResponse.statusCode)")
-            print("🔍 Response headers: \(httpResponse.allHeaderFields)")
+            functionLogger.debug("Status code: \(httpResponse.statusCode)")
+            functionLogger.debug("Response headers: \(httpResponse.allHeaderFields)")
         }
-        print("📄 Response body: \(String(data: data, encoding: .utf8) ?? "nil")")
+        functionLogger.debug("Response body: \(String(data: data, encoding: .utf8) ?? "nil")")
 
-        print("Attempting to decode: \(String(data: data, encoding: .utf8) ?? "nil")")
         do {
             let functions = try JSONDecoder().decode([Function<Parameters>].self, from: data)
-            print("✅ Decoded response: \(functions)")
+            functionLogger.debug("Decoded response: \(functions)")
             return functions
         } catch {
-            print("❌ Decoding error: \(error)")
+            functionLogger.error("Decoding error: \(error)")
             throw error
         }
     }
@@ -115,10 +152,11 @@ public final actor Service: TokenManaging {
     ) async throws -> ModelCallResponse<Response> {
         let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call"
         guard let url = URL(string: endpoint) else { 
+            modelLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
         
-        print("🤖 Making model call to: \(endpoint)")
+        modelLogger.debug("Making model call to: \(endpoint)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -147,25 +185,24 @@ public final actor Service: TokenManaging {
         let jsonData = try encoder.encode(body)
         request.httpBody = jsonData
         
-        print("📤 Request body:")
-        if let jsonString = String(data: jsonData, encoding: .utf8) {
-            print(jsonString)
-        }
+        modelLogger.debug("Request body: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
+            modelLogger.error("Invalid response type received")
             throw AuthError.invalidResponse
         }
         
-        print("📥 Response status: \(httpResponse.statusCode)")
-        print("📥 Response headers: \(httpResponse.allHeaderFields)")
+        modelLogger.debug("Response status: \(httpResponse.statusCode)")
+        modelLogger.debug("Response headers: \(httpResponse.allHeaderFields)")
         
         if let responseString = String(data: data, encoding: .utf8) {
-            print("📥 Raw response data: \(responseString)")
+            modelLogger.debug("Raw response data: \(responseString)")
         }
         
         guard 200...299 ~= httpResponse.statusCode else {
+            modelLogger.error("Model call failed with status \(httpResponse.statusCode)")
             throw AuthError.serverError("Model call failed with status \(httpResponse.statusCode)")
         }
         
@@ -184,8 +221,6 @@ public final actor Service: TokenManaging {
         using metadata: ModelMetadata,
         state: (any Codable & Sendable)? = nil
     ) -> AsyncThrowingStream<String, Error> {
-        let logger = Logger(subsystem: "CompilerSwiftAI", category: "SSE")
-        
         // Verify provider supports streaming
         guard metadata.provider == .openai || metadata.provider == .anthropic else {
             return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only OpenAI and Anthropic support streaming")) }
@@ -194,6 +229,7 @@ public final actor Service: TokenManaging {
         // Prepare all the non-async parts of the request before the Task
         let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call/stream"
         guard let url = URL(string: endpoint) else {
+            modelLogger.error("Invalid URL: \(self.baseURL)")
             return AsyncThrowingStream { $0.finish(throwing: URLError(.badURL)) }
         }
         
@@ -221,6 +257,7 @@ public final actor Service: TokenManaging {
             encoder.outputFormatting = .prettyPrinted
             request.httpBody = try encoder.encode(body)
         } catch {
+            modelLogger.error("Failed to encode request: \(error)")
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
         
@@ -230,25 +267,26 @@ public final actor Service: TokenManaging {
                     let token = try await getValidToken()
                     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                     
-                    print("🔄 Starting SSE stream...")
+                    modelLogger.debug("Starting SSE stream...")
                     
                     let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
                     
                     guard let httpResponse = response as? HTTPURLResponse else {
+                        modelLogger.error("Invalid response type received")
                         throw AuthError.invalidResponse
                     }
                     
                     guard 200...299 ~= httpResponse.statusCode else {
+                        modelLogger.error("Streaming model call failed with status \(httpResponse.statusCode)")
                         throw AuthError.serverError("Streaming model call failed with status \(httpResponse.statusCode)")
                     }
                     
                     for try await line in asyncBytes.lines {
-                        // Log raw line with byte counts to see exactly what we're getting
-                        logger.debug("Raw SSE line [\(line.count) bytes]: \(line, privacy: .public)")
+                        modelLogger.debug("Raw SSE line [\(line.count) bytes]: \(line)")
                         
                         // Skip non-SSE lines (like id: lines)
                         guard line.hasPrefix("data:") else { 
-                            logger.debug("Skipping non-SSE line")
+                            modelLogger.debug("Skipping non-SSE line")
                             continue 
                         }
                         
@@ -257,23 +295,23 @@ public final actor Service: TokenManaging {
                         
                         // If it's just a space or empty after "data:", yield a newline
                         if content.trimmingCharacters(in: .whitespaces).isEmpty {
-                            logger.debug("Empty data line - yielding newline")
+                            modelLogger.debug("Empty data line - yielding newline")
                             continuation.yield("\n")
                             continue
                         }
                         
                         // For non-empty content, trim just the leading space after "data:"
                         let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
-                        logger.debug("Content: \(trimmedContent.debugDescription)")
+                        modelLogger.debug("Content: \(trimmedContent.debugDescription)")
                         
                         // Yield the content
                         continuation.yield(trimmedContent)
                     }
                     
-                    logger.debug("SSE stream complete")
+                    modelLogger.debug("SSE stream complete")
                     continuation.finish()
                 } catch {
-                    print("❌ SSE stream error: \(error)")
+                    modelLogger.error("SSE stream error: \(error)")
                     continuation.finish(throwing: error)
                 }
             }
@@ -284,10 +322,11 @@ public final actor Service: TokenManaging {
         let lowercasedAppId = appId.uuidString.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppId)/end-users/apple"
         guard let url = URL(string: endpoint) else {
+            authLogger.error("Invalid URL: \(self.baseURL)")
             throw AuthError.invalidResponse
         }
         
-        print("🔐 Making auth request to: \(endpoint)")
+        authLogger.debug("Making auth request to: \(endpoint)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -296,31 +335,36 @@ public final actor Service: TokenManaging {
         let body = AppleAuthRequest(idToken: idToken)
         request.httpBody = try JSONEncoder().encode(body)
         
-        print("📤 Request body: \(body)")
+        authLogger.debug("Request body: \(String(describing: body))")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
+            authLogger.error("Invalid response type received")
             throw AuthError.invalidResponse
         }
         
-        print("📥 Response status: \(httpResponse.statusCode)")
+        authLogger.debug("Response status: \(httpResponse.statusCode)")
         if let responseString = String(data: data, encoding: .utf8) {
-            print("📥 Response body: \(responseString)")
+            authLogger.debug("Response body: \(responseString)")
         }
         
         switch httpResponse.statusCode {
         case 200...299:
             let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
-            print("✅ Successfully got access token")
+            authLogger.debug("Successfully got access token")
             return authResponse.access_token
         case 400:
+            authLogger.error("Bundle ID mismatch or SIWA not enabled")
             throw AuthError.serverError("Bundle ID mismatch or SIWA not enabled")
         case 401:
+            authLogger.error("Invalid or expired Apple token")
             throw AuthError.serverError("Invalid or expired Apple token")
         case 500:
+            authLogger.error("Server encryption/decryption issues")
             throw AuthError.serverError("Server encryption/decryption issues")
         default:
+            authLogger.error("Server returned status code \(httpResponse.statusCode)")
             throw AuthError.serverError("Server returned status code \(httpResponse.statusCode)")
         }
     }
