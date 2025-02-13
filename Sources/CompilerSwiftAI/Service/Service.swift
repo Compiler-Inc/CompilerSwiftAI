@@ -272,18 +272,21 @@ public final actor Service: TokenManaging {
                         print("📡 Raw SSE line: '\(line)'")  // Show exact line with quotes
                         
                         if line.hasPrefix("data:") {
-                            // Extract just the content after "data:" prefix
+                            // Extract just the content after "data:" prefix, without the extra space
                             let content = String(line.dropFirst("data:".count))
-                            print("📥 After prefix removal: '\(content)'")
+                            // Only trim a single leading space if it exists (from SSE protocol)
+                            let trimmedContent = content.first == " " ? String(content.dropFirst()) : content
+                            
+                            print("📥 After prefix removal: '\(trimmedContent)'")
                             
                             // Skip empty content
-                            guard !content.isEmpty else {
+                            guard !trimmedContent.isEmpty else {
                                 print("⏭️ Skipping empty content")
                                 continue
                             }
                             
-                            print("📤 Yielding content: '\(content)'")
-                            continuation.yield(StreamChunk(data: content))
+                            print("📤 Yielding content: '\(trimmedContent)'")
+                            continuation.yield(StreamChunk(data: trimmedContent))
                         } else {
                             print("⏭️ Skipping non-data line: '\(line)'")
                         }
