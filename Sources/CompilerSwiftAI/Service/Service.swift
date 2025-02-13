@@ -2,10 +2,12 @@
 
 import Foundation
 import AuthenticationServices
+import os
 
 public protocol TokenManaging: Actor {
     func getValidToken() async throws -> String
 }
+
 
 public final actor Service: TokenManaging {
     // private let baseURL: String = "https://backend.compiler.inc"
@@ -182,35 +184,8 @@ public final actor Service: TokenManaging {
         using metadata: ModelMetadata,
         state: (any Codable & Sendable)? = nil
     ) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    let stream = makeStreamingModelCallWithResponse(
-                        systemPrompt: systemPrompt,
-                        userPrompt: userPrompt,
-                        using: metadata,
-                        state: state
-                    )
-                    
-                    for try await chunk in stream {
-                        print("🔄 Streaming chunk: '\(chunk.data)'")
-                        continuation.yield(chunk.data)
-                    }
-                    
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-        }
-    }
-    
-    private func makeStreamingModelCallWithResponse(
-        systemPrompt: String,
-        userPrompt: String,
-        using metadata: ModelMetadata,
-        state: (any Codable & Sendable)? = nil
-    ) -> AsyncThrowingStream<StreamChunk, Error> {
+        let logger = Logger(subsystem: "CompilerSwiftAI", category: "SSE")
+        
         // Verify provider supports streaming
         guard metadata.provider == .openai || metadata.provider == .anthropic else {
             return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only OpenAI and Anthropic support streaming")) }
@@ -255,6 +230,8 @@ public final actor Service: TokenManaging {
                     let token = try await getValidToken()
                     request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                     
+                    print("🔄 Starting SSE stream...")
+                    
                     let (asyncBytes, response) = try await URLSession.shared.bytes(for: request)
                     
                     guard let httpResponse = response as? HTTPURLResponse else {
@@ -266,34 +243,37 @@ public final actor Service: TokenManaging {
                     }
                     
                     for try await line in asyncBytes.lines {
-                        // Skip empty lines
-                        guard !line.isEmpty else { continue }
+                        // Log raw line with byte counts to see exactly what we're getting
+                        logger.debug("Raw SSE line [\(line.count) bytes]: \(line, privacy: .public)")
                         
-                        print("📡 Raw SSE line: '\(line)'")  // Show exact line with quotes
-                        
-                        if line.hasPrefix("data:") {
-                            // Extract just the content after "data:" prefix, without the extra space
-                            let content = String(line.dropFirst("data:".count))
-                            // Only trim a single leading space if it exists (from SSE protocol)
-                            let trimmedContent = content.first == " " ? String(content.dropFirst()) : content
-                            
-                            print("📥 After prefix removal: '\(trimmedContent)'")
-                            
-                            // Skip empty content
-                            guard !trimmedContent.isEmpty else {
-                                print("⏭️ Skipping empty content")
-                                continue
-                            }
-                            
-                            print("📤 Yielding content: '\(trimmedContent)'")
-                            continuation.yield(StreamChunk(data: trimmedContent))
-                        } else {
-                            print("⏭️ Skipping non-data line: '\(line)'")
+                        // Skip non-SSE lines (like id: lines)
+                        guard line.hasPrefix("data:") else { 
+                            logger.debug("Skipping non-SSE line")
+                            continue 
                         }
+                        
+                        // Get everything after "data:"
+                        let content = String(line.dropFirst("data:".count))
+                        
+                        // If it's just a space or empty after "data:", yield a newline
+                        if content.trimmingCharacters(in: .whitespaces).isEmpty {
+                            logger.debug("Empty data line - yielding newline")
+                            continuation.yield("\n")
+                            continue
+                        }
+                        
+                        // For non-empty content, trim just the leading space after "data:"
+                        let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
+                        logger.debug("Content: \(trimmedContent.debugDescription)")
+                        
+                        // Yield the content
+                        continuation.yield(trimmedContent)
                     }
                     
+                    logger.debug("SSE stream complete")
                     continuation.finish()
                 } catch {
+                    print("❌ SSE stream error: \(error)")
                     continuation.finish(throwing: error)
                 }
             }
