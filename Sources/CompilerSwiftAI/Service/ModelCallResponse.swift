@@ -1,15 +1,11 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-public struct ModelCallResponse<Response: Codable & Sendable>: Codable {
+public struct ModelCallResponse: Codable, Sendable {
     public let role: String
     public let content: String
-    public let refusal: String?
-    public let response: Response?
     
-    public init(role: String, content: String, refusal: String?, response: Response?) {
+    public init(role: String, content: String) {
         self.role = role
         self.content = content
-        self.refusal = refusal
-        self.response = response
     }
 }

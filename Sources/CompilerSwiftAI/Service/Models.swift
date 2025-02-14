@@ -1,6 +1,6 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-public enum ModelProvider: String, Codable {
+public enum ModelProvider: String, Codable, Sendable, Equatable {
     case openai
     case anthropic
     case perplexity
