@@ -127,29 +127,24 @@ public final actor Service: TokenManaging {
         throw AuthError.invalidIdToken
     }
 
-    // Default String response version
     public func makeModelCall(
-        systemPrompt: String,
-        userPrompt: String,
         using metadata: ModelMetadata,
+        messages: [Message],
         state: (any Codable & Sendable)? = nil
     ) async throws -> String {
-        let response: ModelCallResponse<String> = try await makeModelCallWithResponse(
-            systemPrompt: systemPrompt,
-            userPrompt: userPrompt,
+        let response = try await makeModelCallWithResponse(
             using: metadata,
+            messages: messages,
             state: state
         )
         return response.content
     }
     
-    // Generic version for custom response types
-    public func makeModelCallWithResponse<Response: Codable & Sendable>(
-        systemPrompt: String,
-        userPrompt: String,
+    public func makeModelCallWithResponse(
         using metadata: ModelMetadata,
+        messages: [Message],
         state: (any Codable & Sendable)? = nil
-    ) async throws -> ModelCallResponse<Response> {
+    ) async throws -> ModelCallResponse {
         let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call"
         guard let url = URL(string: endpoint) else { 
             modelLogger.error("Invalid URL: \(self.baseURL)")
@@ -157,6 +152,8 @@ public final actor Service: TokenManaging {
         }
         
         modelLogger.debug("Making model call to: \(endpoint)")
+        modelLogger.debug("Using \(messages.count) messages")
+        modelLogger.debug("Message roles: \(messages.map { $0.role.rawValue })")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -165,27 +162,33 @@ public final actor Service: TokenManaging {
         let token = try await getValidToken()
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        // Append state info to userPrompt if available
-        let finalUserPrompt: String
-        if let state = state {
-            finalUserPrompt = "\(userPrompt)\n\nThe current app state is: \(state)"
+        // If state is provided, append it to the last user message
+        let finalMessages: [Message]
+        if let state = state,
+           let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
+            var modifiedMessages = messages
+            let lastUserMessage = modifiedMessages[lastUserMessageIndex]
+            modifiedMessages[lastUserMessageIndex] = Message(
+                id: lastUserMessage.id,
+                role: .user,
+                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
+            )
+            finalMessages = modifiedMessages
         } else {
-            finalUserPrompt = userPrompt
+            finalMessages = messages
         }
         
         let body = ModelCallRequest(
-            systemPrompt: systemPrompt,
-            userPrompt: finalUserPrompt,
-            provider: metadata.provider,
-            model: metadata.id
+            using: metadata,
+            messages: finalMessages
         )
         
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         let jsonData = try encoder.encode(body)
         request.httpBody = jsonData
         
-        modelLogger.debug("Request body: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
+        modelLogger.debug("Full request body JSON: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -206,7 +209,7 @@ public final actor Service: TokenManaging {
             throw AuthError.serverError("Model call failed with status \(httpResponse.statusCode)")
         }
         
-        return try JSONDecoder().decode(ModelCallResponse<Response>.self, from: data)
+        return try JSONDecoder().decode(ModelCallResponse.self, from: data)
     }
     
     // Backend streaming chunk format
@@ -216,15 +219,16 @@ public final actor Service: TokenManaging {
     
     // Specialized String streaming version
     public func makeStreamingModelCall(
-        systemPrompt: String,
-        userPrompt: String,
         using metadata: ModelMetadata,
+        messages: [Message],
         state: (any Codable & Sendable)? = nil
     ) -> AsyncThrowingStream<String, Error> {
         // Verify provider supports streaming
         guard metadata.provider == .openai || metadata.provider == .anthropic else {
             return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only OpenAI and Anthropic support streaming")) }
         }
+        
+        modelLogger.debug("Starting streaming model call with \(messages.count) messages")
         
         // Prepare all the non-async parts of the request before the Task
         let endpoint = "\(baseURL)/v1/apps/\(appId.uuidString)/end-users/model-call/stream"
@@ -238,24 +242,34 @@ public final actor Service: TokenManaging {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         
-        let finalUserPrompt: String
-        if let state = state {
-            finalUserPrompt = "\(userPrompt)\n\nThe current app state is: \(state)"
+        // If state is provided, append it to the last user message
+        let finalMessages: [Message]
+        if let state = state,
+           let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
+            var modifiedMessages = messages
+            let lastUserMessage = modifiedMessages[lastUserMessageIndex]
+            modifiedMessages[lastUserMessageIndex] = Message(
+                id: lastUserMessage.id,
+                role: .user,
+                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
+            )
+            finalMessages = modifiedMessages
         } else {
-            finalUserPrompt = userPrompt
+            finalMessages = messages
         }
         
         let body = ModelCallRequest(
-            systemPrompt: systemPrompt,
-            userPrompt: finalUserPrompt,
-            provider: metadata.provider,
-            model: metadata.id
+            using: metadata,
+            messages: finalMessages
         )
         
         do {
             let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            request.httpBody = try encoder.encode(body)
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let jsonData = try encoder.encode(body)
+            request.httpBody = jsonData
+            
+            modelLogger.debug("Streaming request body JSON: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
         } catch {
             modelLogger.error("Failed to encode request: \(error)")
             return AsyncThrowingStream { $0.finish(throwing: error) }
@@ -422,6 +436,50 @@ public final actor Service: TokenManaging {
             return "Failed to process server response"
         default:
             return "An unexpected error occurred"
+        }
+    }
+
+    @available(macOS 14.0, iOS 17.0, *)
+    public func streamModelResponse(
+        using metadata: ModelMetadata,
+        messages: [Message],
+        state: (any Codable & Sendable)? = nil
+    ) -> AsyncThrowingStream<Message, Error> {
+        modelLogger.debug("Starting streamModelResponse with \(messages.count) messages")
+        
+        // Capture metadata values before the closure to prevent data races
+        let provider = metadata.provider
+        let modelId = metadata.id
+        let capabilities = metadata.capabilities
+        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, id: modelId)
+        
+        return AsyncThrowingStream { continuation in
+            Task {
+                do {
+                    let stream = makeStreamingModelCall(
+                        using: capturedMetadata,
+                        messages: messages,
+                        state: state
+                    )
+                    
+                    var streamingMessage = Message(role: .assistant, content: "")
+                    continuation.yield(streamingMessage)
+                    
+                    for try await chunk in stream {
+                        streamingMessage = Message(
+                            id: streamingMessage.id,
+                            role: .assistant,
+                            content: streamingMessage.content + chunk
+                        )
+                        continuation.yield(streamingMessage)
+                    }
+                    
+                    continuation.finish()
+                } catch {
+                    modelLogger.error("Error in streamModelResponse: \(error)")
+                    continuation.finish(throwing: error)
+                }
+            }
         }
     }
 }
