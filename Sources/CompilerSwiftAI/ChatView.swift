@@ -4,7 +4,7 @@ import SwiftUI
 
 public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
     @State var model = ChatViewModel()
-    @State private var speechService = SpeechRecognitionService()
+//    @State private var speechService = SpeechRecognitionService()
 
     var state: AppState
     var service: Service
@@ -40,7 +40,7 @@ public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & S
         .frame(minWidth: 200)
         .background(DLMColors.primary10)
         .onAppear {
-            model.speechService = speechService
+//            model.speechService = speechService
             model.setupSpeechHandlers()
         }
     }

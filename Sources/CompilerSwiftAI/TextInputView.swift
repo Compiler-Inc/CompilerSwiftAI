@@ -38,7 +38,7 @@ struct TextInputView: View {
                 }
 
                 Button(action: {
-                    model.speechService?.stopRecording()
+//                    model.speechService?.stopRecording()
                     process(model.inputText)
                     model.inputText = ""
                 }) {
