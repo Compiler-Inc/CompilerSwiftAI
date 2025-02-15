@@ -90,38 +90,23 @@ public struct Message: Codable, Sendable, Identifiable, Equatable {
 public actor ChatHistory {
     private var _messages: [Message]
     private var streamingMessageId: UUID?
+    
+    /// We'll store the active continuation if someone requests `messagesStream`.
     private var continuation: AsyncStream<[Message]>.Continuation?
     
     public var messages: [Message] {
+        // Return all messages except those that are *still* streaming
         get async {
-            _messages.filter { message in
-                if case .streaming = message.state {
-                    return false
-                }
-                return true
-            }
+            _messages.filter { $0.state == .complete }
         }
     }
     
+    /// A continuous stream of *all* messages, including .streaming states
     public var messagesStream: AsyncStream<[Message]> {
-        get async {
-            AsyncStream { continuation in
-                self.continuation = continuation
-                continuation.yield(_messages)
-            }
-        }
-    }
-    
-    public var isStreaming: Bool {
-        get async {
-            streamingMessageId != nil
-        }
-    }
-    
-    public var currentStreamingMessage: Message? {
-        get async {
-            guard let id = streamingMessageId else { return nil }
-            return _messages.first { $0.id == id }
+        AsyncStream { continuation in
+            self.continuation = continuation
+            // Immediately yield whatever we have
+            continuation.yield(_messages)
         }
     }
     
@@ -143,51 +128,47 @@ public actor ChatHistory {
         notifyMessageUpdate()
     }
     
+    /// Start a new streaming response from the assistant
     @discardableResult
     public func beginStreamingResponse() -> UUID {
         let id = UUID()
-        let message = Message(
-            id: id,
-            role: .assistant,
-            content: "",
-            state: .streaming("")
-        )
-        _messages.append(message)
+        let msg = Message(id: id, role: .assistant, content: "", state: .streaming(""))
+        _messages.append(msg)
         streamingMessageId = id
         notifyMessageUpdate()
         return id
     }
     
-    public func updateStreamingMessage(_ content: String) {
+    /// Update the partial text of the *current* streaming assistant message
+    public func updateStreamingMessage(_ partial: String) {
         guard let id = streamingMessageId,
-              let index = _messages.firstIndex(where: { $0.id == id }) else { return }
-        var message = _messages[index]
-        message.state = .streaming(content)
-        _messages[index] = message
+              let idx = _messages.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        let old = _messages[idx]
+        _messages[idx] = Message(
+            id: old.id,
+            role: old.role,
+            content: partial,
+            state: .streaming(partial)
+        )
         notifyMessageUpdate()
     }
     
+    /// Mark the streaming message complete with final text
     public func completeStreamingMessage(_ finalContent: String) {
         guard let id = streamingMessageId,
-              let index = _messages.firstIndex(where: { $0.id == id }) else { return }
-        var message = _messages[index]
-        message.state = .complete
-        message = Message(id: id, role: .assistant, content: finalContent)
-        _messages[index] = message
+              let idx = _messages.firstIndex(where: { $0.id == id }) else {
+            return
+        }
+        _messages[idx] = Message(
+            id: id,
+            role: .assistant,
+            content: finalContent,
+            state: .complete
+        )
         streamingMessageId = nil
         notifyMessageUpdate()
-    }
-    
-    public var systemPrompt: String {
-        get async {
-            _messages.first?.content ?? ""
-        }
-    }
-    
-    public var lastUserMessage: String {
-        get async {
-            _messages.last { $0.role == .user }?.content ?? ""
-        }
     }
     
     public func clearHistory(keepingSystemPrompt: Bool = true) {
