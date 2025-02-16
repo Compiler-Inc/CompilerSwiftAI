@@ -1,52 +1,12 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-import Foundation
-import AuthenticationServices
 import OSLog
-
-extension Logger {
-    private static let subsystem = "CompilerSwiftAI"
-    
-    /// Logs related to function calling and processing
-    static let functionCalls = Logger(subsystem: subsystem, category: "functionCalls")
-    
-    /// Logs related to model calls, streaming, and responses
-    static let modelCalls = Logger(subsystem: subsystem, category: "modelCalls")
-    
-    /// Logs related to authentication and token management
-    static let auth = Logger(subsystem: subsystem, category: "auth")
-}
-
-/// A wrapper around Logger that handles debug mode checks
-private struct DebugLogger {
-    private let logger: Logger
-    private let isEnabled: Bool
-    
-    init(_ logger: Logger, isEnabled: Bool) {
-        self.logger = logger
-        self.isEnabled = isEnabled
-    }
-    
-    func debug(_ message: @escaping @autoclosure () -> String) {
-        guard isEnabled else { return }
-        logger.debug("\(message())")
-    }
-    
-    func error(_ message: @escaping @autoclosure () -> String) {
-        // Always log errors, regardless of debug mode
-        logger.error("\(message())")
-    }
-}
-
-public protocol TokenManaging: Actor {
-    func getValidToken() async throws -> String
-}
 
 public final actor Service: TokenManaging {
      private let baseURL: String = "https://backend.compiler.inc"
 //    private let baseURL: String = "http://localhost:3000"
     let appId: UUID
-    private let keychain: any KeychainManaging
+    internal let keychain: any KeychainManaging
     private let functionLogger: DebugLogger
     private let modelLogger: DebugLogger
     private let authLogger: DebugLogger
@@ -397,29 +357,6 @@ public final actor Service: TokenManaging {
             }
         }
         return false
-    }
-
-    public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
-        switch result {
-        case .success(let auth):
-            guard let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
-                  let idTokenData = appleIDCredential.identityToken,
-                  let idToken = String(data: idTokenData, encoding: .utf8) else {
-                throw AuthError.invalidIdToken
-            }
-            
-            // Store Apple ID token - this acts as our "refresh token"
-            // Apple ID tokens can be reused for a while (usually days to weeks)
-            await keychain.save(idToken, service: "apple-id-token", account: "user")
-            
-            let accessToken = try await authenticateWithServer(idToken: idToken)
-            await keychain.save(accessToken, service: "access-token", account: "user")
-            
-            return true
-            
-        case .failure(let error):
-            throw AuthError.networkError(error)
-        }
     }
     
     private func handleError(_ error: Error) -> String {
