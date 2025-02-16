@@ -43,8 +43,8 @@ public protocol TokenManaging: Actor {
 }
 
 public final actor Service: TokenManaging {
-    // private let baseURL: String = "https://backend.compiler.inc"
-    private let baseURL: String = "http://localhost:3000"
+     private let baseURL: String = "https://backend.compiler.inc"
+//    private let baseURL: String = "http://localhost:3000"
     let appId: UUID
     private let keychain: any KeychainManaging
     private let functionLogger: DebugLogger
