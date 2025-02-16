@@ -10,7 +10,7 @@ public struct AppleAuthRequest: Codable {
     }
 }
 
-extension Service {
+extension CompilerClient {
     public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
         switch result {
         case .success(let auth):

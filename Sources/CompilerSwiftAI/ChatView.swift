@@ -7,13 +7,13 @@ public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & S
 //    @State private var speechService = SpeechRecognitionService()
 
     var state: AppState
-    var service: Service
+    var client: CompilerClient
     var describe: (Function<Parameters>) -> String
     var execute: (Function<Parameters>) -> Void
 
-    public init(state: AppState, service: Service, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
+    public init(state: AppState, service: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
         self.state = state
-        self.service = service
+        self.client = service
         self.describe = describe
         self.execute = execute
     }
@@ -21,7 +21,7 @@ public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & S
     func process(prompt: String) {
         Task {
             model.addStep("Sending request to Compiler")
-            guard let functions: [Function<Parameters>] = try? await service.processFunction(prompt, for: state, using: "") else { return }
+            guard let functions: [Function<Parameters>] = try? await client.processFunction(prompt, for: state, using: "") else { return }
             model.completeLastStep()
 
             for function in functions {

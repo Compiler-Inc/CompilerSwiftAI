@@ -2,8 +2,8 @@
 
 import OSLog
 
-public final actor Service: TokenManaging {
-     private let baseURL: String = "https://backend.compiler.inc"
+public final actor CompilerClient: TokenManaging {
+    private let baseURL: String = "https://backend.compiler.inc"
 //    private let baseURL: String = "http://localhost:3000"
     let appId: UUID
     internal let keychain: any KeychainManaging
