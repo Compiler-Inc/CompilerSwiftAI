@@ -1,6 +1,11 @@
 import SwiftUI
 import Observation
 import MarkdownUI
+#if os(iOS)
+import UIKit
+#else
+import AppKit
+#endif
 
 // MARK: - Input Types
 
@@ -125,7 +130,7 @@ private struct GrowingTextField: View {
                     .background(.clear)
                     .foregroundColor(textColor)
                     .onChange(of: text) { _, newValue in
-                        // Recalculate height based on content
+                        #if os(iOS)
                         let size = (newValue as NSString).boundingRect(
                             with: CGSize(width: UIScreen.main.bounds.width - 100, height: .infinity),
                             options: [.usesFontLeading, .usesLineFragmentOrigin],
@@ -133,6 +138,15 @@ private struct GrowingTextField: View {
                             context: nil
                         )
                         textViewHeight = min(120, max(36, size.height + 20))
+                        #else
+                        let size = (newValue as NSString).boundingRect(
+                            with: CGSize(width: NSScreen.main?.frame.width ?? 800 - 100, height: .infinity),
+                            options: [.usesFontLeading, .usesLineFragmentOrigin],
+                            attributes: [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)],
+                            context: nil
+                        )
+                        textViewHeight = min(120, max(36, size.height + 20))
+                        #endif
                     }
                     .overlay(alignment: .leading) {
                         if text.isEmpty {
