@@ -15,6 +15,8 @@ public actor SpeechRecognitionService {
         }
         self.speechRecognizer = recognizer
         self.audioEngine = AVAudioEngine()
+
+        #if !os(macOS)
         let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
@@ -22,6 +24,7 @@ public actor SpeechRecognitionService {
         } catch {
             print("Error starting audio session: \(error.localizedDescription)")
         }
+        #endif
     }
 
     public func requestAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
