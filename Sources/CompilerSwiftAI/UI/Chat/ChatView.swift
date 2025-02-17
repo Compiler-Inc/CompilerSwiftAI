@@ -4,8 +4,8 @@ import MarkdownUI
 
 // MARK: - Chat Container
 @MainActor
-public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
-    let dataSource: DataSource
+public struct ChatView<Style: ChatViewStyle>: View {
+    let viewModel: ChatViewModel
     var style: Style
     let inputType: ChatInputType
     @State var showScrollButton = false
@@ -27,191 +27,29 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
     
     var visibleMessages: [Message] {
         // First filter out system messages
-        let userAndAssistantMessages = dataSource.messages.filter { $0.role != .system }
+        let userAndAssistantMessages = viewModel.messages.filter { $0.role != .system }
         
         // Then apply our visible message count limit
-        let startIndex = max(0, userAndAssistantMessages.count - dataSource.visibleMessageCount)
+        let startIndex = max(0, userAndAssistantMessages.count - viewModel.visibleMessageCount)
         return Array(userAndAssistantMessages[startIndex...])
     }
     
     public init(
-        dataSource: DataSource,
+        client: CompilerClient,
         inputType: ChatInputType = .combined,
         style: Style = DefaultChatViewStyle()
     ) {
-        self.dataSource = dataSource
+        self.viewModel = ChatViewModel(client: client)
         self.inputType = inputType
         self.style = style
     }
-    
-    func defaultMarkdownTheme(for message: Message) -> Theme {
-        let foregroundColor = message.role == .user ? userTextColor : assistantTextColor
-        
-        return Theme()
-            .text {
-                ForegroundColor(foregroundColor)
-            }
-            .code {
-                FontFamilyVariant(.monospaced)
-                FontSize(.em(0.85))
-                ForegroundColor(foregroundColor)
-            }
-            .codeBlock { configuration in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    configuration.label
-                        .markdownTextStyle {
-                            FontFamilyVariant(.monospaced)
-                            FontSize(.em(0.85))
-                            ForegroundColor(foregroundColor)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(foregroundColor.opacity(0.1))
-                        .cornerRadius(8)
-                }
-                .padding(.vertical, 8)
-            }
-            .strong {
-                FontWeight(.bold)
-            }
-            .emphasis {
-                FontStyle(.italic)
-            }
-            .heading1 { configuration in
-                configuration.label
-                    .markdownMargin(top: .em(1), bottom: .em(0.5))
-                    .markdownTextStyle {
-                        FontWeight(.bold)
-                        FontSize(.em(1.5))
-                        ForegroundColor(foregroundColor)
-                    }
-            }
-            .heading2 { configuration in
-                configuration.label
-                    .markdownMargin(top: .em(0.8), bottom: .em(0.4))
-                    .markdownTextStyle {
-                        FontWeight(.bold)
-                        FontSize(.em(1.3))
-                        ForegroundColor(foregroundColor)
-                    }
-            }
-            .heading3 { configuration in
-                configuration.label
-                    .markdownMargin(top: .em(0.6), bottom: .em(0.3))
-                    .markdownTextStyle {
-                        FontWeight(.bold)
-                        FontSize(.em(1.1))
-                        ForegroundColor(foregroundColor)
-                    }
-            }
-            .list { configuration in
-                configuration.label
-                    .markdownMargin(top: .em(0.5))
-            }
-            .listItem { configuration in
-                configuration.label
-                    .markdownMargin(top: .em(0.25))
-            }
-            .bulletedListMarker { configuration in
-                Text("•")
-                    .foregroundColor(foregroundColor)
-                    .relativeFrame(minWidth: .em(1.5), alignment: .trailing)
-            }
-            .numberedListMarker { configuration in
-                Text("\(configuration.itemNumber).")
-                    .foregroundColor(foregroundColor)
-                    .relativeFrame(minWidth: .em(1.5), alignment: .trailing)
-            }
-    }
-    
+
     // MARK: - Input Views
-    
-    @ViewBuilder
-    func makeInputView() -> some View {
-        switch inputType {
-        case .text:
-            makeTextOnlyInput()
-        case .voice:
-            makeVoiceOnlyInput()
-        case .combined:
-            makeCombinedInput()
-        }
-    }
-    
-    func makeTextOnlyInput() -> some View {
-        GrowingTextField(
-            placeholder: style.inputFieldPlaceholder,
-            text: dataSource.userInputBinding,
-            textColor: style.inputFieldTextColor,
-            backgroundColor: style.inputFieldBackgroundColor,
-            cornerRadius: style.inputFieldCornerRadius,
-            padding: style.inputFieldPadding,
-            onSubmit: sendCurrentInput,
-            style: style
-        ) {
-            if !dataSource.userInputBinding.wrappedValue.isEmpty {
-                makeSendButton()
-            }
-        }
-        .padding(.horizontal, style.horizontalPadding)
-        .padding(.vertical, 8)
-    }
-    
-    func makeVoiceOnlyInput() -> some View {
-        makeVoiceButton()
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, style.horizontalPadding)
-            .padding(.vertical, 8)
-    }
-    
-    func makeCombinedInput() -> some View {
-        GrowingTextField(
-            placeholder: style.inputFieldPlaceholder,
-            text: dataSource.userInputBinding,
-            textColor: style.inputFieldTextColor,
-            backgroundColor: style.inputFieldBackgroundColor,
-            cornerRadius: style.inputFieldCornerRadius,
-            padding: style.inputFieldPadding,
-            onSubmit: sendCurrentInput,
-            style: style
-        ) {
-            if dataSource.userInputBinding.wrappedValue.isEmpty {
-                makeVoiceButton()
-            } else {
-                makeSendButton()
-            }
-        }
-        .padding(.horizontal, style.horizontalPadding)
-        .padding(.vertical, 8)
-    }
-    
-    func makeVoiceButton() -> some View {
-        Button {
-            dataSource.toggleRecording()
-        } label: {
-            (isRecording ? style.voiceButtonActiveImage : style.voiceButtonImage)
-                .font(.system(size: style.inputButtonSize * 0.8))
-                .foregroundStyle(isRecording ? style.voiceButtonActiveTint : style.voiceButtonTint)
-                .frame(width: style.inputButtonSize, height: style.inputButtonSize)
-        }
-        .disabled(dataSource.isStreaming)
-    }
-    
-    func makeSendButton() -> some View {
-        Button(action: sendCurrentInput) {
-            style.sendButtonImage
-                .font(.system(size: style.inputButtonSize * 0.8))
-                .foregroundStyle(style.sendButtonTint)
-                .frame(width: style.inputButtonSize, height: style.inputButtonSize)
-        }
-        .disabled(dataSource.userInputBinding.wrappedValue.isEmpty || dataSource.isStreaming)
-    }
-    
     func sendCurrentInput() {
-        guard !dataSource.userInputBinding.wrappedValue.isEmpty else { return }
-        let input = dataSource.userInputBinding.wrappedValue
-        dataSource.userInputBinding.wrappedValue = ""
-        dataSource.sendMessage(input)
+        guard !viewModel.userInputBinding.wrappedValue.isEmpty else { return }
+        let input = viewModel.userInputBinding.wrappedValue
+        viewModel.userInputBinding.wrappedValue = ""
+        viewModel.sendMessage(input)
     }
     
     public var body: some View {
@@ -219,7 +57,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
             ZStack(alignment: .bottomTrailing) {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: dataSource.spacing) {
+                        LazyVStack(spacing: 12) {
                             ForEach(visibleMessages) { message in
                                 ChatBubble(message: message)
                                     .bubbleBackground(
@@ -272,20 +110,3 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         }
     }
 }
-
-// MARK: - View Extensions
-
-extension View {
-    func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
-        Group {
-            if condition {
-                transform(self)
-            } else {
-                self
-            }
-        }
-    }
-}
-
-// MARK: - Chat Container Modifiers
-
