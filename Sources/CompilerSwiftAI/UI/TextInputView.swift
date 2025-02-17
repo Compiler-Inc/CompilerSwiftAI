@@ -9,7 +9,6 @@ struct TextInputView: View {
     var body: some View {
         VStack(spacing: 8) {
             Text("Prompt")
-                .foregroundStyle(DLMColors.primary75)
                 .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -19,11 +18,8 @@ struct TextInputView: View {
                     .padding(.vertical, 8)
             }
             .frame(height: 100)
-            .foregroundStyle(DLMColors.primary100)
             .scrollContentBackground(.hidden)
-            .background(DLMColors.primary20)
             .cornerRadius(8)
-            .tint(DLMColors.primary100)
 
             HStack {
                 Button {
@@ -32,8 +28,6 @@ struct TextInputView: View {
                     Image(systemName: model.isRecording ? "microphone.fill" : "microphone")
                         .padding(.vertical, 8)
                         .frame(width: 40)
-                        .background(DLMColors.dlmGradient)
-                        .foregroundColor(.white)
                         .cornerRadius(8)
                 }
 
@@ -48,8 +42,6 @@ struct TextInputView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(DLMColors.dlmGradient)
-                    .foregroundColor(.white)
                     .cornerRadius(8)
                 }
                 .disabled(model.inputText.isEmpty)
