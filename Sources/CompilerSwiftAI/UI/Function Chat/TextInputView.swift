@@ -2,9 +2,20 @@
 
 import SwiftUI
 
-struct TextInputView: View {
-    @Bindable var model: FunctionChatViewModel
+struct TextInputView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
+    var model: FunctionChatViewModel<AppState, Parameters>
     var process: (String) -> Void
+    
+    var userInputBinding: Binding<String> {
+        Binding(
+            get: { model.inputText },
+            set: { newValue in
+                // Only update if actually different
+                guard model.inputText != newValue else { return }
+                model.inputText = newValue
+            }
+        )
+    }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -13,7 +24,7 @@ struct TextInputView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $model.inputText)
+                TextEditor(text: userInputBinding)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
             }
@@ -32,9 +43,7 @@ struct TextInputView: View {
                 }
 
                 Button(action: {
-//                    model.speechService?.stopRecording()
                     process(model.inputText)
-                    model.inputText = ""
                 }) {
                     HStack {
                         Text("Submit")
@@ -50,9 +59,4 @@ struct TextInputView: View {
         }
         .padding()
     }
-}
-
-#Preview {
-    let model = FunctionChatViewModel()
-    TextInputView(model: model, process: { _ in })
 }
