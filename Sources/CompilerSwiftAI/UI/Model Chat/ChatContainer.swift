@@ -7,6 +7,27 @@ import UIKit
 import AppKit
 #endif
 
+// Platform abstraction
+extension View {
+    var screenWidth: CGFloat {
+        #if os(iOS)
+        UIScreen.main.bounds.width
+        #else
+        NSScreen.main?.visibleFrame.width ?? 800
+        #endif
+    }
+}
+
+extension NSAttributedString.Key {
+    static var platformDefaultFont: Any {
+        #if os(iOS)
+        UIFont.preferredFont(forTextStyle: .body)
+        #else
+        NSFont.systemFont(ofSize: NSFont.systemFontSize)
+        #endif
+    }
+}
+
 // MARK: - Input Types
 
 public enum ChatInputType {
@@ -130,23 +151,21 @@ private struct GrowingTextField: View {
                     .background(.clear)
                     .foregroundColor(textColor)
                     .onChange(of: text) { _, newValue in
-                        #if os(iOS)
+                        guard !newValue.isEmpty else {
+                            textViewHeight = 36
+                            return
+                        }
+                        
+                        let width = max(100, screenWidth - 100) // Ensure minimum width
                         let size = (newValue as NSString).boundingRect(
-                            with: CGSize(width: UIScreen.main.bounds.width - 100, height: .infinity),
+                            with: CGSize(width: width, height: .infinity),
                             options: [.usesFontLeading, .usesLineFragmentOrigin],
-                            attributes: [.font: UIFont.preferredFont(forTextStyle: .body)],
+                            attributes: [.font: NSAttributedString.Key.platformDefaultFont],
                             context: nil
                         )
-                        textViewHeight = min(120, max(36, size.height + 20))
-                        #else
-                        let size = (newValue as NSString).boundingRect(
-                            with: CGSize(width: NSScreen.main?.frame.width ?? 800 - 100, height: .infinity),
-                            options: [.usesFontLeading, .usesLineFragmentOrigin],
-                            attributes: [.font: NSFont.systemFont(ofSize: NSFont.systemFontSize)],
-                            context: nil
-                        )
-                        textViewHeight = min(120, max(36, size.height + 20))
-                        #endif
+                        
+                        let newHeight = size.height + 20
+                        textViewHeight = min(120, max(36, newHeight.isNaN ? 36 : newHeight))
                     }
                     .overlay(alignment: .leading) {
                         if text.isEmpty {
