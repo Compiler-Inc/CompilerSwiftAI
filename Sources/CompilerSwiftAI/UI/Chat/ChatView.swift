@@ -1,224 +1,31 @@
 import SwiftUI
 import Observation
 import MarkdownUI
-#if os(iOS)
-import UIKit
-#else
-import AppKit
-#endif
-
-// Platform abstraction
-extension View {
-    var screenWidth: CGFloat {
-        #if os(iOS)
-        UIScreen.main.bounds.width
-        #else
-        NSScreen.main?.visibleFrame.width ?? 800
-        #endif
-    }
-}
-
-extension NSAttributedString.Key {
-    static var platformDefaultFont: Any {
-        #if os(iOS)
-        UIFont.preferredFont(forTextStyle: .body)
-        #else
-        NSFont.systemFont(ofSize: NSFont.systemFontSize)
-        #endif
-    }
-}
-
-// MARK: - Input Types
-
-public enum ChatInputType {
-    case text
-    case voice
-    case combined
-}
-
-// MARK: - Chat Container Style
-public protocol ChatViewStyle {
-    var scrollButtonImage: Image { get set }
-    var scrollButtonTint: Color { get set }
-    var scrollButtonBackgroundColor: Color { get set }
-    var scrollButtonShadowRadius: CGFloat { get set }
-    var horizontalPadding: CGFloat { get set }
-    
-    // Input field styling
-    var inputFieldBackgroundColor: Color { get set }
-    var inputFieldTextColor: Color { get set }
-    var inputFieldPlaceholder: String { get set }
-    var inputFieldCornerRadius: CGFloat { get set }
-    var inputFieldPadding: EdgeInsets { get set }
-    
-    // Common button styling
-    var inputButtonSize: CGFloat { get set }
-    var inputButtonPadding: CGFloat { get set }
-    
-    // Send button specific
-    var sendButtonImage: Image { get set }
-    var sendButtonTint: Color { get set }
-    var sendButtonBackgroundColor: Color { get set }
-    
-    // Voice button specific
-    var voiceButtonImage: Image { get set }
-    var voiceButtonActiveImage: Image { get set }
-    var voiceButtonTint: Color { get set }
-    var voiceButtonActiveTint: Color { get set }
-    var voiceButtonBackgroundColor: Color { get set }
-    var voiceButtonActiveBackgroundColor: Color { get set }
-}
-
-public struct DefaultChatContainerStyle: ChatViewStyle {
-    public var scrollButtonImage: Image = Image(systemName: "arrow.down.circle.fill")
-    public var scrollButtonTint: Color = .white
-    public var scrollButtonBackgroundColor: Color = .blue
-    public var scrollButtonShadowRadius: CGFloat = 4
-    public var horizontalPadding: CGFloat = 16
-    
-    // Input field styling
-    public var inputFieldBackgroundColor: Color = .gray.opacity(0.1)
-    public var inputFieldTextColor: Color = .primary
-    public var inputFieldPlaceholder: String = "Message"
-    public var inputFieldCornerRadius: CGFloat = 20
-    public var inputFieldPadding: EdgeInsets = EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 40)
-    
-    // Common button styling
-    public var inputButtonSize: CGFloat = 28
-    public var inputButtonPadding: CGFloat = 0
-    
-    // Send button specific
-    public var sendButtonImage: Image = Image(systemName: "arrow.up.circle.fill")
-    public var sendButtonTint: Color = .blue
-    public var sendButtonBackgroundColor: Color = .clear
-    
-    // Voice button specific
-    public var voiceButtonImage: Image = Image(systemName: "mic.circle.fill")
-    public var voiceButtonActiveImage: Image = Image(systemName: "mic.circle.fill")
-    public var voiceButtonTint: Color = .blue
-    public var voiceButtonActiveTint: Color = .red
-    public var voiceButtonBackgroundColor: Color = .clear
-    public var voiceButtonActiveBackgroundColor: Color = .clear
-    
-    public init() {}
-}
-
-// MARK: - Growing TextField
-
-private struct GrowingTextField: View {
-    let placeholder: String
-    @Binding var text: String
-    let textColor: Color
-    let backgroundColor: Color
-    let cornerRadius: CGFloat
-    let padding: EdgeInsets
-    let onSubmit: () -> Void
-    let trailingContent: () -> AnyView
-    let style: ChatViewStyle
-    
-    init(
-        placeholder: String,
-        text: Binding<String>,
-        textColor: Color,
-        backgroundColor: Color,
-        cornerRadius: CGFloat,
-        padding: EdgeInsets,
-        onSubmit: @escaping () -> Void,
-        style: ChatViewStyle,
-        @ViewBuilder trailingContent: @escaping () -> some View
-    ) {
-        self.placeholder = placeholder
-        self._text = text
-        self.textColor = textColor
-        self.backgroundColor = backgroundColor
-        self.cornerRadius = cornerRadius
-        self.padding = padding
-        self.onSubmit = onSubmit
-        self.style = style
-        self.trailingContent = { AnyView(trailingContent()) }
-    }
-    
-    @State private var textViewHeight: CGFloat = 36  // Initial height
-    @FocusState private var isFocused: Bool
-    
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            HStack(spacing: 0) {
-                TextEditor(text: $text)
-                    .focused($isFocused)
-                    .frame(height: max(36, textViewHeight))
-                    .scrollContentBackground(.hidden)
-                    .background(.clear)
-                    .foregroundColor(textColor)
-                    .onChange(of: text) { _, newValue in
-                        guard !newValue.isEmpty else {
-                            textViewHeight = 36
-                            return
-                        }
-                        
-                        let width = max(100, screenWidth - 100) // Ensure minimum width
-                        let size = (newValue as NSString).boundingRect(
-                            with: CGSize(width: width, height: .infinity),
-                            options: [.usesFontLeading, .usesLineFragmentOrigin],
-                            attributes: [.font: NSAttributedString.Key.platformDefaultFont],
-                            context: nil
-                        )
-                        
-                        let newHeight = size.height + 20
-                        textViewHeight = min(120, max(36, newHeight.isNaN ? 36 : newHeight))
-                    }
-                    .overlay(alignment: .leading) {
-                        if text.isEmpty {
-                            Text(placeholder)
-                                .foregroundColor(.gray)
-                                .allowsHitTesting(false)
-                                .padding(.leading, 4)
-                        }
-                    }
-            }
-            .padding(.trailing, style.inputButtonSize + 8)  // Increased spacing for larger button
-            
-            trailingContent()
-                .padding(.trailing, 4)  // Small edge padding
-                .padding(.bottom, 4)  // Add bottom padding to center vertically
-        }
-        .padding(EdgeInsets(
-            top: padding.top,
-            leading: padding.leading,
-            bottom: padding.bottom,
-            trailing: max(padding.trailing - style.inputButtonSize, 8)  // Ensure minimum trailing space
-        ))
-        .background(backgroundColor)
-        .cornerRadius(cornerRadius)
-        .onSubmit(onSubmit)
-    }
-}
 
 // MARK: - Chat Container
-
 @MainActor
 public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
-    private let dataSource: DataSource
-    private var style: Style
-    private let inputType: ChatInputType
-    @State private var showScrollButton = false
-    @State private var scrollViewProxy: ScrollViewProxy?
-    @State private var isRecording = false
+    let dataSource: DataSource
+    var style: Style
+    let inputType: ChatInputType
+    @State var showScrollButton = false
+    @State var scrollViewProxy: ScrollViewProxy?
+    @State var isRecording = false
     
     // Bubble styling properties
-    private var userBubbleColor: Color = .blue
-    private var assistantBubbleColor: Color = .clear
-    private var userTextColor: Color = .white
-    private var assistantTextColor: Color = .black
-    private var userTypingColor: Color = .white.opacity(0.7)
-    private var assistantTypingColor: Color = .gray.opacity(0.7)
-    private var bubbleCornerRadius: CGFloat = 16
-    private var bubblePadding: EdgeInsets?
+    var userBubbleColor: Color = .blue
+    var assistantBubbleColor: Color = .clear
+    var userTextColor: Color = .white
+    var assistantTextColor: Color = .black
+    var userTypingColor: Color = .white.opacity(0.7)
+    var assistantTypingColor: Color = .gray.opacity(0.7)
+    var bubbleCornerRadius: CGFloat = 16
+    var bubblePadding: EdgeInsets?
     
     // Markdown theme customization
-    private var markdownTheme: ((Theme) -> Theme)?
+    var markdownTheme: ((Theme) -> Theme)?
     
-    private var visibleMessages: [Message] {
+    var visibleMessages: [Message] {
         // First filter out system messages
         let userAndAssistantMessages = dataSource.messages.filter { $0.role != .system }
         
@@ -230,14 +37,14 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
     public init(
         dataSource: DataSource,
         inputType: ChatInputType = .combined,
-        style: Style = DefaultChatContainerStyle()
+        style: Style = DefaultChatViewStyle()
     ) {
         self.dataSource = dataSource
         self.inputType = inputType
         self.style = style
     }
     
-    private func defaultMarkdownTheme(for message: Message) -> Theme {
+    func defaultMarkdownTheme(for message: Message) -> Theme {
         let foregroundColor = message.role == .user ? userTextColor : assistantTextColor
         
         return Theme()
@@ -320,7 +127,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
     // MARK: - Input Views
     
     @ViewBuilder
-    private func makeInputView() -> some View {
+    func makeInputView() -> some View {
         switch inputType {
         case .text:
             makeTextOnlyInput()
@@ -331,7 +138,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         }
     }
     
-    private func makeTextOnlyInput() -> some View {
+    func makeTextOnlyInput() -> some View {
         GrowingTextField(
             placeholder: style.inputFieldPlaceholder,
             text: dataSource.userInputBinding,
@@ -350,14 +157,14 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         .padding(.vertical, 8)
     }
     
-    private func makeVoiceOnlyInput() -> some View {
+    func makeVoiceOnlyInput() -> some View {
         makeVoiceButton()
             .frame(maxWidth: .infinity)
             .padding(.horizontal, style.horizontalPadding)
             .padding(.vertical, 8)
     }
     
-    private func makeCombinedInput() -> some View {
+    func makeCombinedInput() -> some View {
         GrowingTextField(
             placeholder: style.inputFieldPlaceholder,
             text: dataSource.userInputBinding,
@@ -378,7 +185,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         .padding(.vertical, 8)
     }
     
-    private func makeVoiceButton() -> some View {
+    func makeVoiceButton() -> some View {
         Button {
             dataSource.toggleRecording()
         } label: {
@@ -390,7 +197,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         .disabled(dataSource.isStreaming)
     }
     
-    private func makeSendButton() -> some View {
+    func makeSendButton() -> some View {
         Button(action: sendCurrentInput) {
             style.sendButtonImage
                 .font(.system(size: style.inputButtonSize * 0.8))
@@ -400,7 +207,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
         .disabled(dataSource.userInputBinding.wrappedValue.isEmpty || dataSource.isStreaming)
     }
     
-    private func sendCurrentInput() {
+    func sendCurrentInput() {
         guard !dataSource.userInputBinding.wrappedValue.isEmpty else { return }
         let input = dataSource.userInputBinding.wrappedValue
         dataSource.userInputBinding.wrappedValue = ""
@@ -469,7 +276,7 @@ public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
 // MARK: - View Extensions
 
 extension View {
-    fileprivate func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
+    func `if`<Transform: View>(_ condition: Bool, transform: (Self) -> Transform) -> some View {
         Group {
             if condition {
                 transform(self)
@@ -482,127 +289,3 @@ extension View {
 
 // MARK: - Chat Container Modifiers
 
-public extension ChatView {
-    func userBubbleStyle(
-        backgroundColor: Color,
-        textColor: Color,
-        typingIndicatorColor: Color? = nil
-    ) -> ChatView {
-        var container = self
-        container.userBubbleColor = backgroundColor
-        container.userTextColor = textColor
-        container.userTypingColor = typingIndicatorColor ?? textColor.opacity(0.7)
-        return container
-    }
-    
-    func assistantBubbleStyle(
-        backgroundColor: Color,
-        textColor: Color,
-        typingIndicatorColor: Color? = nil
-    ) -> ChatView {
-        var container = self
-        container.assistantBubbleColor = backgroundColor
-        container.assistantTextColor = textColor
-        container.assistantTypingColor = typingIndicatorColor ?? textColor.opacity(0.7)
-        return container
-    }
-    
-    func bubbleCornerRadius(_ radius: CGFloat) -> ChatView {
-        var container = self
-        container.bubbleCornerRadius = radius
-        return container
-    }
-    
-    func bubblePadding(_ padding: EdgeInsets) -> ChatView {
-        var container = self
-        container.bubblePadding = padding
-        return container
-    }
-    
-    func markdownTheme(_ transform: @escaping (Theme) -> Theme) -> ChatView {
-        var container = self
-        container.markdownTheme = transform
-        return container
-    }
-    
-    func inputFieldStyle(
-        backgroundColor: Color,
-        textColor: Color,
-        placeholder: String,
-        cornerRadius: CGFloat? = nil,
-        padding: EdgeInsets? = nil
-    ) -> ChatView {
-        var container = self
-        var modifiedStyle = style
-        modifiedStyle.inputFieldBackgroundColor = backgroundColor
-        modifiedStyle.inputFieldTextColor = textColor
-        modifiedStyle.inputFieldPlaceholder = placeholder
-        if let cornerRadius = cornerRadius {
-            modifiedStyle.inputFieldCornerRadius = cornerRadius
-        }
-        if let padding = padding {
-            modifiedStyle.inputFieldPadding = padding
-        }
-        container.style = modifiedStyle
-        return container
-    }
-    
-    func inputButtonStyle(
-        size: CGFloat? = nil,
-        padding: CGFloat? = nil,
-        sendImage: Image? = nil,
-        sendTint: Color? = nil,
-        sendBackgroundColor: Color? = nil,
-        voiceImage: Image? = nil,
-        voiceActiveImage: Image? = nil,
-        voiceTint: Color? = nil,
-        voiceActiveTint: Color? = nil,
-        voiceBackgroundColor: Color? = nil,
-        voiceActiveBackgroundColor: Color? = nil
-    ) -> ChatView {
-        var container = self
-        var modifiedStyle = style
-        
-        // Common properties
-        if let size = size {
-            modifiedStyle.inputButtonSize = size
-        }
-        if let padding = padding {
-            modifiedStyle.inputButtonPadding = padding
-        }
-        
-        // Send button specific
-        if let sendImage = sendImage {
-            modifiedStyle.sendButtonImage = sendImage
-        }
-        if let sendTint = sendTint {
-            modifiedStyle.sendButtonTint = sendTint
-        }
-        if let sendBackgroundColor = sendBackgroundColor {
-            modifiedStyle.sendButtonBackgroundColor = sendBackgroundColor
-        }
-        
-        // Voice button specific
-        if let voiceImage = voiceImage {
-            modifiedStyle.voiceButtonImage = voiceImage
-        }
-        if let voiceActiveImage = voiceActiveImage {
-            modifiedStyle.voiceButtonActiveImage = voiceActiveImage
-        }
-        if let voiceTint = voiceTint {
-            modifiedStyle.voiceButtonTint = voiceTint
-        }
-        if let voiceActiveTint = voiceActiveTint {
-            modifiedStyle.voiceButtonActiveTint = voiceActiveTint
-        }
-        if let voiceBackgroundColor = voiceBackgroundColor {
-            modifiedStyle.voiceButtonBackgroundColor = voiceBackgroundColor
-        }
-        if let voiceActiveBackgroundColor = voiceActiveBackgroundColor {
-            modifiedStyle.voiceButtonActiveBackgroundColor = voiceActiveBackgroundColor
-        }
-        
-        container.style = modifiedStyle
-        return container
-    }
-}
