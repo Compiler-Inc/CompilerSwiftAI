@@ -2,8 +2,8 @@
 
 import SwiftUI
 
-public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
-    @State var model = ChatViewModel()
+public struct FunctionChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
+    @State var model = FunctionChatViewModel()
 //    @State private var speechService = SpeechRecognitionService()
 
     var state: AppState

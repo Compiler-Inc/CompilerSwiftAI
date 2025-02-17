@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 @Observable
-class ChatViewModel {
+class FunctionChatViewModel {
     var inputText = ""
     var isRecording = false
     var processingSteps: [ProcessingStep] = []

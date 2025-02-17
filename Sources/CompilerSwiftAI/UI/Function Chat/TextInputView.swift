@@ -3,7 +3,7 @@
 import SwiftUI
 
 struct TextInputView: View {
-    @Bindable var model: ChatViewModel
+    @Bindable var model: FunctionChatViewModel
     var process: (String) -> Void
 
     var body: some View {
@@ -53,6 +53,6 @@ struct TextInputView: View {
 }
 
 #Preview {
-    let model = ChatViewModel()
+    let model = FunctionChatViewModel()
     TextInputView(model: model, process: { _ in })
 }
