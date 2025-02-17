@@ -13,7 +13,6 @@ struct ProcessingStepsView: View {
                     ForEach(steps) { step in
                         HStack {
                             Text(step.text)
-                                .foregroundColor(DLMColors.primary75)
 
                             Spacer()
 

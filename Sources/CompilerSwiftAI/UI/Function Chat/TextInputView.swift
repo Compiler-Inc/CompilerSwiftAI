@@ -2,28 +2,36 @@
 
 import SwiftUI
 
-struct TextInputView: View {
-    @Bindable var model: ChatViewModel
+struct TextInputView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
+    var model: FunctionChatViewModel<AppState, Parameters>
     var process: (String) -> Void
+    
+    var userInputBinding: Binding<String> {
+        Binding(
+            get: { model.inputText },
+            set: { newValue in
+                // Only update if actually different
+                guard model.inputText != newValue else { return }
+                model.inputText = newValue
+            }
+        )
+    }
 
     var body: some View {
         VStack(spacing: 8) {
             Text("Prompt")
-                .foregroundStyle(DLMColors.primary75)
                 .padding(.horizontal, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             ZStack(alignment: .topLeading) {
-                TextEditor(text: $model.inputText)
+                TextEditor(text: userInputBinding)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
+                    .scrollDisabled(true)
             }
             .frame(height: 100)
-            .foregroundStyle(DLMColors.primary100)
             .scrollContentBackground(.hidden)
-            .background(DLMColors.primary20)
             .cornerRadius(8)
-            .tint(DLMColors.primary100)
 
             HStack {
                 Button {
@@ -32,15 +40,11 @@ struct TextInputView: View {
                     Image(systemName: model.isRecording ? "microphone.fill" : "microphone")
                         .padding(.vertical, 8)
                         .frame(width: 40)
-                        .background(DLMColors.dlmGradient)
-                        .foregroundColor(.white)
                         .cornerRadius(8)
                 }
 
                 Button(action: {
-                    model.speechService?.stopRecording()
                     process(model.inputText)
-                    model.inputText = ""
                 }) {
                     HStack {
                         Text("Submit")
@@ -48,8 +52,6 @@ struct TextInputView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 8)
-                    .background(DLMColors.dlmGradient)
-                    .foregroundColor(.white)
                     .cornerRadius(8)
                 }
                 .disabled(model.inputText.isEmpty)
@@ -57,10 +59,6 @@ struct TextInputView: View {
             }
         }
         .padding()
+        .background(.white)
     }
-}
-
-#Preview {
-    let model = ChatViewModel()
-    TextInputView(model: model, process: { _ in })
 }

@@ -14,9 +14,9 @@ In any file you want to interface with this framework, you need to import it:
 
 ```import CompilerSwiftAI```
 
-At some central location, in your code set up a service:
+At some central location, in your code set up a client:
 
-```compiler = Service(apiKey: "<from-initial-app-creation>", appId: "<from-developer-dashboard-for-your-app>")```
+```compiler = CompilerClient(apiKey: "<from-initial-app-creation>", appId: "<from-developer-dashboard-for-your-app>")```
 
 Next you create an enum for "CompilerFunction".  This enum conforms `Sendable` and contains a case for each function you're making available.  for example:
 
