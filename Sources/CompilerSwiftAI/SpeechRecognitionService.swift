@@ -1,6 +1,26 @@
 import Speech
 import AVFoundation
 
+public enum SpeechRecognitionError: LocalizedError {
+    case notAuthorized
+    case noRecognizer
+    case engineFailure(Error)
+    case recognitionFailure(Error)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .notAuthorized:
+            return "Speech recognition not authorized"
+        case .noRecognizer:
+            return "Speech recognizer not available for current locale"
+        case .engineFailure(let error):
+            return "Audio engine error: \(error.localizedDescription)"
+        case .recognitionFailure(let error):
+            return "Recognition error: \(error.localizedDescription)"
+        }
+    }
+}
+
 public actor SpeechRecognitionService {
     private let speechRecognizer: SFSpeechRecognizer
     private let audioEngine: AVAudioEngine
