@@ -58,5 +58,6 @@ struct TextInputView<AppState: Encodable & Sendable, Parameters: Decodable & Sen
             }
         }
         .padding()
+        .background(.white)
     }
 }

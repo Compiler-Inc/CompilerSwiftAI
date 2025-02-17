@@ -15,6 +15,5 @@ public struct FunctionChatView<AppState: Encodable & Sendable, Parameters: Decod
             TextInputView(model: model, process: model.process)
             ProcessingStepsView(steps: model.processingSteps)
         }
-        .frame(minWidth: 200)
     }
 }
