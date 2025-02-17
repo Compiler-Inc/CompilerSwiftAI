@@ -74,7 +74,7 @@ public actor SpeechRecognitionService {
         // Create local state for silence detection
         var isSilent = false
         var silenceStartTime = CFAbsoluteTimeGetCurrent()  // Initialize to now
-        let silenceThreshold: Float = 0.001
+        let silenceThreshold: Float = 0.01
         let silenceDuration: TimeInterval = 1.5
         var hasEndedAudio = false
 

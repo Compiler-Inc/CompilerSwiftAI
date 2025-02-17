@@ -59,7 +59,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                     if !self.inputText.isEmpty {
                         process(prompt: self.inputText)
 //                        sendMessage(self.inputText)
-                        self.inputText = ""
+//                        self.inputText = ""
                     }
                     
                     isRecording = false
@@ -78,6 +78,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
     func completeLastStep() {
         guard let index = processingSteps.indices.last else { return }
         processingSteps[index].isComplete = true
+        inputText = ""
     }
     
     func process(prompt: String) {

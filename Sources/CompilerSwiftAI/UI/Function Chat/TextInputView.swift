@@ -27,6 +27,7 @@ struct TextInputView<AppState: Encodable & Sendable, Parameters: Decodable & Sen
                 TextEditor(text: userInputBinding)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
+                    .scrollDisabled(true)
             }
             .frame(height: 100)
             .scrollContentBackground(.hidden)
