@@ -37,7 +37,7 @@ public enum ChatInputType {
 }
 
 // MARK: - Chat Container Style
-public protocol ChatContainerStyle {
+public protocol ChatViewStyle {
     var scrollButtonImage: Image { get set }
     var scrollButtonTint: Color { get set }
     var scrollButtonBackgroundColor: Color { get set }
@@ -69,7 +69,7 @@ public protocol ChatContainerStyle {
     var voiceButtonActiveBackgroundColor: Color { get set }
 }
 
-public struct DefaultChatContainerStyle: ChatContainerStyle {
+public struct DefaultChatContainerStyle: ChatViewStyle {
     public var scrollButtonImage: Image = Image(systemName: "arrow.down.circle.fill")
     public var scrollButtonTint: Color = .white
     public var scrollButtonBackgroundColor: Color = .blue
@@ -114,7 +114,7 @@ private struct GrowingTextField: View {
     let padding: EdgeInsets
     let onSubmit: () -> Void
     let trailingContent: () -> AnyView
-    let style: ChatContainerStyle
+    let style: ChatViewStyle
     
     init(
         placeholder: String,
@@ -124,7 +124,7 @@ private struct GrowingTextField: View {
         cornerRadius: CGFloat,
         padding: EdgeInsets,
         onSubmit: @escaping () -> Void,
-        style: ChatContainerStyle,
+        style: ChatViewStyle,
         @ViewBuilder trailingContent: @escaping () -> some View
     ) {
         self.placeholder = placeholder
@@ -197,7 +197,7 @@ private struct GrowingTextField: View {
 // MARK: - Chat Container
 
 @MainActor
-public struct ChatContainer<DataSource: ChatDataSource, Style: ChatContainerStyle>: View {
+public struct ChatView<DataSource: ChatDataSource, Style: ChatViewStyle>: View {
     private let dataSource: DataSource
     private var style: Style
     private let inputType: ChatInputType
@@ -482,12 +482,12 @@ extension View {
 
 // MARK: - Chat Container Modifiers
 
-public extension ChatContainer {
+public extension ChatView {
     func userBubbleStyle(
         backgroundColor: Color,
         textColor: Color,
         typingIndicatorColor: Color? = nil
-    ) -> ChatContainer {
+    ) -> ChatView {
         var container = self
         container.userBubbleColor = backgroundColor
         container.userTextColor = textColor
@@ -499,7 +499,7 @@ public extension ChatContainer {
         backgroundColor: Color,
         textColor: Color,
         typingIndicatorColor: Color? = nil
-    ) -> ChatContainer {
+    ) -> ChatView {
         var container = self
         container.assistantBubbleColor = backgroundColor
         container.assistantTextColor = textColor
@@ -507,19 +507,19 @@ public extension ChatContainer {
         return container
     }
     
-    func bubbleCornerRadius(_ radius: CGFloat) -> ChatContainer {
+    func bubbleCornerRadius(_ radius: CGFloat) -> ChatView {
         var container = self
         container.bubbleCornerRadius = radius
         return container
     }
     
-    func bubblePadding(_ padding: EdgeInsets) -> ChatContainer {
+    func bubblePadding(_ padding: EdgeInsets) -> ChatView {
         var container = self
         container.bubblePadding = padding
         return container
     }
     
-    func markdownTheme(_ transform: @escaping (Theme) -> Theme) -> ChatContainer {
+    func markdownTheme(_ transform: @escaping (Theme) -> Theme) -> ChatView {
         var container = self
         container.markdownTheme = transform
         return container
@@ -531,7 +531,7 @@ public extension ChatContainer {
         placeholder: String,
         cornerRadius: CGFloat? = nil,
         padding: EdgeInsets? = nil
-    ) -> ChatContainer {
+    ) -> ChatView {
         var container = self
         var modifiedStyle = style
         modifiedStyle.inputFieldBackgroundColor = backgroundColor
@@ -559,7 +559,7 @@ public extension ChatContainer {
         voiceActiveTint: Color? = nil,
         voiceBackgroundColor: Color? = nil,
         voiceActiveBackgroundColor: Color? = nil
-    ) -> ChatContainer {
+    ) -> ChatView {
         var container = self
         var modifiedStyle = style
         
