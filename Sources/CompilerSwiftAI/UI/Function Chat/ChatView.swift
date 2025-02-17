@@ -38,7 +38,6 @@ public struct ChatView<AppState: Encodable & Sendable, Parameters: Decodable & S
             ProcessingStepsView(steps: model.processingSteps)
         }
         .frame(minWidth: 200)
-        .background(DLMColors.primary10)
         .onAppear {
 //            model.speechService = speechService
             model.setupSpeechHandlers()
