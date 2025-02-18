@@ -1,6 +1,18 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.\
 
-import OSLog
+import Foundation
+
+public struct AuthResponse: Codable {
+    public let access_token: String
+}
+
+public enum AuthError: Error {
+    case invalidIdToken
+    case networkError(Error)
+    case invalidResponse
+    case serverError(String)
+    case decodingError
+}
 
 extension CompilerClient {
     public func getValidToken() async throws -> String {

@@ -10,19 +10,6 @@ public struct AppleAuthRequest: Codable {
     }
 }
 
-public struct AuthResponse: Codable {
-    public let access_token: String
-}
-
-public enum AuthError: Error {
-    case invalidIdToken
-    case networkError(Error)
-    case invalidResponse
-    case serverError(String)
-    case decodingError
-}
-
-
 extension CompilerClient {
     public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
         switch result {
