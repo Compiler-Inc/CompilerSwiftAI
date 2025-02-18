@@ -3,13 +3,8 @@
 import AuthenticationServices
 import SwiftUI
 
-public protocol KeychainManaging: Actor {
-    func save(_ data: String, service: String, account: String) async
-    func read(service: String, account: String) async -> String?
-}
-
-// Helper for Keychain operations
-public actor KeychainHelper: KeychainManaging {
+/// Helper for Keychain operations
+public actor KeychainHelper: Actor {
     public static let standard = KeychainHelper()
     public init() {}
     

@@ -9,7 +9,7 @@ let defaultSystemPrompt: String = """
 
 @MainActor
 @Observable
-class ChatViewModel: ChatDataSource {
+class ChatViewModel {
     // MARK: - Properties
     var errorMessage: String?
     private var _userInput = ""  // Make private to control access

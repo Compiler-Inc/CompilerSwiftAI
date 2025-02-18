@@ -4,9 +4,9 @@ import MarkdownUI
 
 // MARK: - Chat Container
 @MainActor
-public struct ChatView<Style: ChatViewStyle>: View {
+public struct ChatView: View {
     let viewModel: ChatViewModel
-    var style: Style
+    var style: ChatViewStyle
     let inputType: ChatInputType
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
@@ -37,7 +37,7 @@ public struct ChatView<Style: ChatViewStyle>: View {
     public init(
         client: CompilerClient,
         inputType: ChatInputType = .combined,
-        style: Style = DefaultChatViewStyle()
+        style: ChatViewStyle = ChatViewStyle()
     ) {
         self.viewModel = ChatViewModel(client: client)
         self.inputType = inputType

@@ -14,6 +14,7 @@ extension Logger {
     /// Logs related to authentication and token management
     static let auth = Logger(subsystem: subsystem, category: "auth")
 }
+
 /// A wrapper around Logger that handles debug mode checks
 struct DebugLogger {
     private let logger: Logger

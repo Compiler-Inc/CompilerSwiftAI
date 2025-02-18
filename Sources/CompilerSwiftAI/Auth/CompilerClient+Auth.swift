@@ -2,7 +2,7 @@
 
 import OSLog
 
-extension CompilerClient: TokenManaging {
+extension CompilerClient {
     public func getValidToken() async throws -> String {
         // First try to get the stored apple id token
            if let appleIdToken = await keychain.read(service: "apple-id-token", account: "user") {

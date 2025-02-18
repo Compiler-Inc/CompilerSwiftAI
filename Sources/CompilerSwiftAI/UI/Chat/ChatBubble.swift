@@ -1,26 +1,8 @@
 import SwiftUI
 import MarkdownUI
 
-// MARK: - Chat Bubble Style
-public protocol ChatBubbleStyle {
-    associatedtype BubbleShape: Shape
-    
-    var backgroundColor: Color { get set }
-    var foregroundColor: Color { get set }
-    var padding: EdgeInsets { get set }
-    var cornerRadius: CGFloat { get set }
-    
-    // Typing indicator styling
-    var typingIndicatorColor: Color { get set }
-    var typingIndicatorSize: CGFloat { get set }
-    var typingIndicatorSpacing: CGFloat { get set }
-    
-    @ViewBuilder
-    func makeBubbleShape() -> BubbleShape
-}
-
 // Default implementation
-public struct DefaultChatBubbleStyle: ChatBubbleStyle {
+public struct ChatBubbleStyle {
     public typealias BubbleShape = RoundedRectangle
     
     public var backgroundColor: Color
@@ -58,9 +40,9 @@ public struct DefaultChatBubbleStyle: ChatBubbleStyle {
 
 // MARK: - Chat Bubble View
 
-public struct ChatBubble<Style: ChatBubbleStyle>: View {
+public struct ChatBubble: View {
     private let message: Message
-    private var style: Style
+    private var style: ChatBubbleStyle
     @State private var isAnimating = false
     
     private var content: String {
@@ -135,7 +117,7 @@ public struct ChatBubble<Style: ChatBubbleStyle>: View {
             }
     }
     
-    public init(message: Message, style: Style = DefaultChatBubbleStyle()) {
+    public init(message: Message, style: ChatBubbleStyle = ChatBubbleStyle()) {
         self.message = message
         self.style = style
     }
@@ -167,8 +149,8 @@ public struct ChatBubble<Style: ChatBubbleStyle>: View {
 
 // MARK: - Typing Indicator
 
-private struct TypingIndicator<Style: ChatBubbleStyle>: View {
-    let style: Style
+private struct TypingIndicator: View {
+    let style: ChatBubbleStyle
     @State private var isAnimating = false
     
     var body: some View {

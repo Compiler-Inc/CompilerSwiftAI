@@ -8,7 +8,7 @@ public final actor CompilerClient {
     let appId: UUID
 
     internal let baseURL: String = "https://backend.compiler.inc"
-    internal let keychain: any KeychainManaging
+    internal let keychain: KeychainHelper = KeychainHelper.standard
     internal let functionLogger: DebugLogger
     internal let modelLogger: DebugLogger
     internal let authLogger: DebugLogger
@@ -18,9 +18,8 @@ public final actor CompilerClient {
     ///   - appId: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - keychain: Optional Key chain manager (defaults to standard)
     ///   - enableDebugLogging: Whether or not to log debug info
-    public init(appId: UUID, keychain: any KeychainManaging = KeychainHelper.standard, enableDebugLogging: Bool = false) {
+    public init(appId: UUID, enableDebugLogging: Bool = false) {
         self.appId = appId
-        self.keychain = keychain
         self.functionLogger = DebugLogger(Logger.functionCalls, isEnabled: enableDebugLogging)
         self.modelLogger = DebugLogger(Logger.modelCalls, isEnabled: enableDebugLogging)
         self.authLogger = DebugLogger(Logger.auth, isEnabled: enableDebugLogging)
