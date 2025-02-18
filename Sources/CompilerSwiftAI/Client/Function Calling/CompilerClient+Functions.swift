@@ -2,7 +2,14 @@
 
 import OSLog
 
-extension CompilerClient {    
+extension CompilerClient {
+    // Request model
+    struct Request<State>: Encodable, Sendable where State: Encodable & Sendable {
+        let id: String
+        let prompt: String
+        let state: State
+    }
+
     /// Create an array of functions with parameters based on a user prompt and state of the app
     /// - Parameters:
     ///   - prompt: Words to extract semantic intention from

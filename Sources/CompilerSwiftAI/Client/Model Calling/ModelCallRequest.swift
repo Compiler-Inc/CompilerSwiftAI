@@ -1,6 +1,5 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-import Foundation
 import OSLog
 
 /// Represents a message in the chat history, matching OpenAI/Anthropic's format

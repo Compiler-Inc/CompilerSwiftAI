@@ -1,10 +1,16 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-import Foundation
 import Combine
 import SwiftUI
 
 public typealias ModelID = String
+
+public enum ModelCapability: String, Codable, Sendable, Equatable {
+    case chat
+    case audio
+    case image
+    case video
+}
 
 public struct ModelMetadata: Codable, Sendable, Equatable {
     public let id: ModelID
@@ -17,20 +23,20 @@ public struct ModelMetadata: Codable, Sendable, Equatable {
         self.id = id
     }
     
-    // Convenience initializers for each provider's models
-    public static func openAI(_ model: OpenAIModels) -> ModelMetadata {
+    // Convenience initializers for each provider's Models
+    public static func openAI(_ model: OpenAIModel) -> ModelMetadata {
         ModelMetadata(provider: .openai, id: model.rawValue)
     }
     
-    public static func anthropic(_ model: AnthropicModels) -> ModelMetadata {
+    public static func anthropic(_ model: AnthropicModel) -> ModelMetadata {
         ModelMetadata(provider: .anthropic, id: model.rawValue)
     }
     
-    public static func perplexity(_ model: PerplexityModels) -> ModelMetadata {
+    public static func perplexity(_ model: PerplexityModel) -> ModelMetadata {
         ModelMetadata(provider: .perplexity, id: model.rawValue)
     }
     
-    public static func deepseek(_ model: DeepSeekModels) -> ModelMetadata {
+    public static func deepseek(_ model: DeepSeekModel) -> ModelMetadata {
         ModelMetadata(provider: .deepseek, id: model.rawValue)
     }
     
