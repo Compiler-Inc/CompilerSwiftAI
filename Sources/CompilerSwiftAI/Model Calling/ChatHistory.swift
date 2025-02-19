@@ -6,7 +6,7 @@ import Foundation
 @available(macOS 14.0, iOS 17.0, *)
 public actor ChatHistory {
     private var _messages: [Message]
-    private var streamingMessageId: UUID?
+    private var messageID: UUID?
     
     /// We'll store the active continuation if someone requests `messagesStream`.
     private var continuation: AsyncStream<[Message]>.Continuation?
@@ -51,14 +51,14 @@ public actor ChatHistory {
         let id = UUID()
         let msg = Message(id: id, role: .assistant, content: "", state: .streaming(""))
         _messages.append(msg)
-        streamingMessageId = id
+        messageID = id
         notifyMessageUpdate()
         return id
     }
     
     /// Update the partial text of the *current* streaming assistant message
     public func updateStreamingMessage(_ partial: String) {
-        guard let id = streamingMessageId,
+        guard let id = messageID,
               let idx = _messages.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -74,7 +74,7 @@ public actor ChatHistory {
     
     /// Mark the streaming message complete with final text
     public func completeStreamingMessage(_ finalContent: String) {
-        guard let id = streamingMessageId,
+        guard let id = messageID,
               let idx = _messages.firstIndex(where: { $0.id == id }) else {
             return
         }
@@ -84,12 +84,12 @@ public actor ChatHistory {
             content: finalContent,
             state: .complete
         )
-        streamingMessageId = nil
+        messageID = nil
         notifyMessageUpdate()
     }
     
     public func clearHistory(keepingSystemPrompt: Bool = true) {
-        streamingMessageId = nil
+        messageID = nil
         if keepingSystemPrompt, let systemMessage = _messages.first, systemMessage.role == .system {
             _messages = [systemMessage]
         } else {

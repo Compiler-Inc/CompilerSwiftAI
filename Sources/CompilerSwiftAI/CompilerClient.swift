@@ -15,8 +15,7 @@ public final actor CompilerClient {
     
     /// Initialize the Compiler Client
     /// - Parameters:
-    ///   - appId: Application ID (retrievable from the Comiler Developer Dashboard)
-    ///   - keychain: Optional Key chain manager (defaults to standard)
+    ///   - appID: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - enableDebugLogging: Whether or not to log debug info
     public init(appID: UUID, enableDebugLogging: Bool = false) {
         self.appID = appID

@@ -9,7 +9,7 @@ extension CompilerClient {
             guard let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
                   let idTokenData = appleIDCredential.identityToken,
                   let idToken = String(data: idTokenData, encoding: .utf8) else {
-                throw AuthError.invalidIdToken
+                throw AuthError.invalidToken
             }
             
             // Store Apple ID token - this acts as our "refresh token"

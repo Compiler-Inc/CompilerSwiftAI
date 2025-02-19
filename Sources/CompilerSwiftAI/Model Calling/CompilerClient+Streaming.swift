@@ -134,9 +134,9 @@ extension CompilerClient {
         
         // Capture metadata values before the closure to prevent data races
         let provider = metadata.provider
-        let modelId = metadata.id
+        let modelID = metadata.id
         let capabilities = metadata.capabilities
-        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, id: modelId)
+        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, id: modelID)
         
         return AsyncThrowingStream { continuation in
             Task {

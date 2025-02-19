@@ -3,7 +3,7 @@
 import Foundation
 
 public enum AuthError: Error {
-    case invalidIdToken
+    case invalidToken
     case networkError(Error)
     case invalidResponse
     case serverError(String)
@@ -15,17 +15,17 @@ extension CompilerClient {
     /// - Returns: Token string
     public func getValidToken() async throws -> String {
         // First try to get the stored apple id token
-           if let appleIdToken = await keychain.read(service: "apple-id-token", account: "user") {
+           if let token = await keychain.read(service: "apple-id-token", account: "user") {
             do {
                 // Try to refresh the token
-                let newToken = try await authenticateWithServer(idToken: appleIdToken)
+                let newToken = try await authenticateWithServer(idToken: token)
                 await keychain.save(newToken, service: "access-token", account: "user")
                 return newToken
             } catch {
                 throw error
             }
         }
-        throw AuthError.invalidIdToken
+        throw AuthError.invalidToken
     }
     
     public func authenticateWithServer(idToken: String) async throws -> String {
