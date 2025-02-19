@@ -1,21 +1,22 @@
 import SwiftUI
 import MarkdownUI
 
+public typealias BubbleShape = RoundedRectangle
+
 // Default implementation
-public struct ChatBubbleStyle {
-    public typealias BubbleShape = RoundedRectangle
+struct ChatBubbleStyle {
     
-    public var backgroundColor: Color
-    public var foregroundColor: Color
-    public var padding: EdgeInsets
-    public var cornerRadius: CGFloat
+    var backgroundColor: Color
+    var foregroundColor: Color
+    var padding: EdgeInsets
+    var cornerRadius: CGFloat
     
     // Typing indicator styling
-    public var typingIndicatorColor: Color
-    public var typingIndicatorSize: CGFloat
-    public var typingIndicatorSpacing: CGFloat
+    var typingIndicatorColor: Color
+    var typingIndicatorSize: CGFloat
+    var typingIndicatorSpacing: CGFloat
     
-    public init(
+    init(
         backgroundColor: Color = .blue,
         foregroundColor: Color = .white,
         padding: EdgeInsets = .init(top: 12, leading: 16, bottom: 12, trailing: 16),
@@ -33,19 +34,19 @@ public struct ChatBubbleStyle {
         self.typingIndicatorSpacing = typingIndicatorSpacing
     }
     
-    public func makeBubbleShape() -> BubbleShape {
+    func makeBubbleShape() -> BubbleShape {
         RoundedRectangle(cornerRadius: cornerRadius)
     }
 }
 
 // MARK: - Chat Bubble View
 
-public struct ChatBubble: View {
-    private let message: Message
-    private var style: ChatBubbleStyle
+struct ChatBubble: View {
+    let message: Message
+    var style: ChatBubbleStyle
     @State private var isAnimating = false
     
-    private var content: String {
+    var content: String {
         switch message.state {
         case .streaming(let partial):
             return partial
@@ -54,7 +55,7 @@ public struct ChatBubble: View {
         }
     }
     
-    private var markdownTheme: Theme {
+    var markdownTheme: Theme {
         Theme()
             .text {
                 ForegroundColor(style.foregroundColor)
@@ -148,8 +149,7 @@ public struct ChatBubble: View {
 }
 
 // MARK: - Typing Indicator
-
-private struct TypingIndicator: View {
+struct TypingIndicator: View {
     let style: ChatBubbleStyle
     @State private var isAnimating = false
     
