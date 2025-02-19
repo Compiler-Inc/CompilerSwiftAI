@@ -5,12 +5,12 @@ import OSLog
 extension CompilerClient {
     
     // Backend streaming chunk format
-    private struct StreamChunk: Codable {
+    struct StreamChunk: Codable {
         let data: String
     }
     
     // Specialized String streaming version
-    public func makeStreamingModelCall(
+    func makeStreamingModelCall(
         using metadata: ModelMetadata,
         messages: [Message],
         state: (any Codable & Sendable)? = nil
@@ -125,7 +125,7 @@ extension CompilerClient {
     }
 
     @available(macOS 14.0, iOS 17.0, *)
-    public func streamModelResponse(
+    func streamModelResponse(
         using metadata: ModelMetadata,
         messages: [Message],
         state: (any Codable & Sendable)? = nil

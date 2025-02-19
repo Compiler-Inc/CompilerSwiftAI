@@ -13,7 +13,7 @@ public enum AuthError: Error {
 extension CompilerClient {
     /// Gets either the stored Apple ID Token or a refreshed one
     /// - Returns: Token string
-    public func getValidToken() async throws -> String {
+    func getValidToken() async throws -> String {
         // First try to get the stored apple id token
            if let token = await keychain.read(service: "apple-id-token", account: "user") {
             do {
@@ -28,7 +28,7 @@ extension CompilerClient {
         throw AuthError.invalidToken
     }
     
-    public func authenticateWithServer(idToken: String) async throws -> String {
+    func authenticateWithServer(idToken: String) async throws -> String {
         let lowercasedAppID = appID.uuidString.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
         guard let url = URL(string: endpoint) else {

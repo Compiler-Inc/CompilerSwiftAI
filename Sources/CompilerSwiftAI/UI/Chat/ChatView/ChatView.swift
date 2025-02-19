@@ -1,5 +1,4 @@
 import SwiftUI
-import Observation
 import MarkdownUI
 
 public enum ChatInputType {

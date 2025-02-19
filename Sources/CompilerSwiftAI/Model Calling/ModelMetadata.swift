@@ -47,28 +47,28 @@ public struct ModelMetadata: Codable, Sendable, Equatable {
     }
 }
 
-public struct Message: Codable, Sendable, Identifiable, Equatable {
-    public let id: UUID
-    public let role: Role
-    public let content: String
-    public internal(set) var state: MessageState
+struct Message: Codable, Sendable, Identifiable, Equatable {
+    let id: UUID
+    let role: Role
+    let content: String
+    var state: MessageState
     
-    public enum Role: String, Codable, Sendable {
+    enum Role: String, Codable, Sendable {
         case system
         case user
         case assistant
     }
     
-    public enum MessageState: Codable, Sendable, Equatable {
+    enum MessageState: Codable, Sendable, Equatable {
         case complete
         case streaming(String)
         
-        public var isStreaming: Bool {
+        var isStreaming: Bool {
             if case .streaming = self { return true }
             return false
         }
         
-        public var currentContent: String {
+        var currentContent: String {
             switch self {
             case .complete: return ""
             case .streaming(let partial): return partial
@@ -76,14 +76,14 @@ public struct Message: Codable, Sendable, Identifiable, Equatable {
         }
     }
     
-    public init(role: Role, content: String) {
+    init(role: Role, content: String) {
         self.id = UUID()
         self.role = role
         self.content = content
         self.state = .complete
     }
     
-    public init(id: UUID = UUID(), role: Role, content: String, state: MessageState = .complete) {
+    init(id: UUID = UUID(), role: Role, content: String, state: MessageState = .complete) {
         self.id = id
         self.role = role
         self.content = content

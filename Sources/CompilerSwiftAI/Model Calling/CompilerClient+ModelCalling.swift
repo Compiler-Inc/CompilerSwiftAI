@@ -3,10 +3,6 @@
 import OSLog
 
 extension CompilerClient {
-    // Backend streaming chunk format
-    private struct StreamChunk: Codable {
-        let data: String
-    }
     
     func makeModelCall(
         using metadata: ModelMetadata,
@@ -92,8 +88,4 @@ extension CompilerClient {
         
         return try JSONDecoder().decode(ModelCallResponse.self, from: data)
     }
-    
-
-    
-
 }

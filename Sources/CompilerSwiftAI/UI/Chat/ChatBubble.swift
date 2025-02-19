@@ -1,8 +1,6 @@
 import SwiftUI
 import MarkdownUI
 
-public typealias BubbleShape = RoundedRectangle
-
 // Default implementation
 struct ChatBubbleStyle {
     
@@ -34,7 +32,7 @@ struct ChatBubbleStyle {
         self.typingIndicatorSpacing = typingIndicatorSpacing
     }
     
-    func makeBubbleShape() -> BubbleShape {
+    func makeBubbleShape() -> RoundedRectangle {
         RoundedRectangle(cornerRadius: cornerRadius)
     }
 }
