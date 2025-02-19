@@ -5,11 +5,6 @@ import OSLog
 extension CompilerClient {
     var streamingProviders: [ModelProvider] { [.OpenAI, .Anthropic] }
     
-    // Backend streaming chunk format
-    struct StreamChunk: Codable {
-        let data: String
-    }
-    
     // Specialized String streaming version
     func makeStreamingModelCall(
         using metadata: ModelMetadata,
