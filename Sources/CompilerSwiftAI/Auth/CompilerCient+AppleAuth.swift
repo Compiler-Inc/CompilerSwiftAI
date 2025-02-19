@@ -2,14 +2,6 @@
 
 import AuthenticationServices
 
-public struct AppleAuthRequest: Codable {
-    let idToken: String
-    
-    enum CodingKeys: String, CodingKey {
-        case idToken = "id_token"
-    }
-}
-
 extension CompilerClient {
     public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
         switch result {

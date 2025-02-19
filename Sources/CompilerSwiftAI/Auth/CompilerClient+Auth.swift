@@ -2,10 +2,6 @@
 
 import Foundation
 
-public struct AuthResponse: Codable {
-    public let access_token: String
-}
-
 public enum AuthError: Error {
     case invalidIdToken
     case networkError(Error)
@@ -44,7 +40,7 @@ extension CompilerClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body = AppleAuthRequest(idToken: idToken)
+        let body = ["id_token": idToken]
         request.httpBody = try JSONEncoder().encode(body)
         
         authLogger.debug("Request body: \(body)")
@@ -60,9 +56,10 @@ extension CompilerClient {
         if let responseString = String(data: data, encoding: .utf8) {
             authLogger.debug("Response body: \(responseString)")
         }
-        
+
         switch httpResponse.statusCode {
         case 200...299:
+            struct AuthResponse: Codable { let access_token: String }
             let authResponse = try JSONDecoder().decode(AuthResponse.self, from: data)
             authLogger.debug("Successfully got access token")
             return authResponse.access_token
