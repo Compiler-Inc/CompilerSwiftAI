@@ -31,7 +31,7 @@ extension CompilerClient {
     }
     
     public func authenticateWithServer(idToken: String) async throws -> String {
-        let lowercasedAppId = appId.uuidString.lowercased()
+        let lowercasedAppId = appID.uuidString.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppId)/end-users/apple"
         guard let url = URL(string: endpoint) else {
             authLogger.error("Invalid URL: \(self.baseURL)")
@@ -47,7 +47,7 @@ extension CompilerClient {
         let body = AppleAuthRequest(idToken: idToken)
         request.httpBody = try JSONEncoder().encode(body)
         
-        authLogger.debug("Request body: \(String(describing: body))")
+        authLogger.debug("Request body: \(body)")
         
         let (data, response) = try await URLSession.shared.data(for: request)
         

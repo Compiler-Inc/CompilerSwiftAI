@@ -5,7 +5,7 @@ import OSLog
 /// Primary interface for interacting with Compiler's Back End
 public final actor CompilerClient {
     /// Application ID (retrievable from the Comiler Developer Dashboard)
-    let appId: UUID
+    let appID: UUID
 
     internal let baseURL: String = "https://backend.compiler.inc"
     internal let keychain: KeychainHelper = KeychainHelper.standard
@@ -18,8 +18,8 @@ public final actor CompilerClient {
     ///   - appId: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - keychain: Optional Key chain manager (defaults to standard)
     ///   - enableDebugLogging: Whether or not to log debug info
-    public init(appId: UUID, enableDebugLogging: Bool = false) {
-        self.appId = appId
+    public init(appID: UUID, enableDebugLogging: Bool = false) {
+        self.appID = appID
         self.functionLogger = DebugLogger(Logger.functionCalls, isEnabled: enableDebugLogging)
         self.modelLogger = DebugLogger(Logger.modelCalls, isEnabled: enableDebugLogging)
         self.authLogger = DebugLogger(Logger.auth, isEnabled: enableDebugLogging)

@@ -202,7 +202,7 @@ class ChatViewModel {
                 self.logger.log("Streaming complete. Final content size=\(accumulated.count). Completing streaming message.")
                 await self.chatHistory.completeStreamingMessage(accumulated)
             } catch {
-                self.logger.error("❌ SSE stream error: \(String(describing: error)). Completing with partial content.")
+                self.logger.error("❌ SSE stream error: \(error). Completing with partial content.")
                 await self.chatHistory.completeStreamingMessage(accumulated)
             }
             
