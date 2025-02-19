@@ -3,23 +3,18 @@
 import OSLog
 
 /// Represents a message in the chat history, matching OpenAI/Anthropic's format
-public struct APIMessage: Codable {
-    public let role: String
-    public let content: String
-    
-    public init(role: String, content: String) {
-        self.role = role
-        self.content = content
-    }
+struct APIMessage: Codable {
+    let role: String
+    let content: String
 }
 
 /// Request format for model calls, matching the backend API contract
-public struct ModelCallRequest: Codable {
-    public let provider: ModelProvider
-    public let model: ModelID
-    public let messages: [APIMessage]
+struct ModelCallRequest: Codable {
+    let provider: ModelProvider
+    let model: ModelID
+    let messages: [APIMessage]
     
-    public init(using metadata: ModelMetadata, messages: [Message]) {
+    init(using metadata: ModelMetadata, messages: [Message]) {
         self.provider = metadata.provider
         self.model = metadata.id
         
@@ -31,12 +26,7 @@ public struct ModelCallRequest: Codable {
     }
 }
 
-public struct ModelCallResponse: Codable, Sendable {
+struct ModelCallResponse: Codable, Sendable {
     public let role: String
     public let content: String
-    
-    public init(role: String, content: String) {
-        self.role = role
-        self.content = content
-    }
 }

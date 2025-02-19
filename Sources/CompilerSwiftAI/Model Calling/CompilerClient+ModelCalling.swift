@@ -8,7 +8,7 @@ extension CompilerClient {
         let data: String
     }
     
-    public func makeModelCall(
+    func makeModelCall(
         using metadata: ModelMetadata,
         messages: [Message],
         state: (any Codable & Sendable)? = nil
@@ -21,7 +21,7 @@ extension CompilerClient {
         return response.content
     }
     
-    public func makeModelCallWithResponse(
+    func makeModelCallWithResponse(
         using metadata: ModelMetadata,
         messages: [Message],
         state: (any Codable & Sendable)? = nil

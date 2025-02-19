@@ -1,13 +1,13 @@
 import Speech
 import AVFoundation
 
-public enum SpeechRecognitionError: LocalizedError {
+enum SpeechRecognitionError: LocalizedError {
     case notAuthorized
     case noRecognizer
     case engineFailure(Error)
     case recognitionFailure(Error)
     
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .notAuthorized:
             return "Speech recognition not authorized"
@@ -21,15 +21,15 @@ public enum SpeechRecognitionError: LocalizedError {
     }
 }
 
-public actor SpeechRecognitionService {
-    private let speechRecognizer: SFSpeechRecognizer
-    private let audioEngine: AVAudioEngine
+actor SpeechRecognitionService {
+    let speechRecognizer: SFSpeechRecognizer
+    let audioEngine: AVAudioEngine
     
     // These actor‐isolated properties let us stop/cancel ongoing recognition:
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognitionTask: SFSpeechRecognitionTask?
+    var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    var recognitionTask: SFSpeechRecognitionTask?
 
-    public init(locale: Locale = Locale(identifier: "en-US")) {
+    init(locale: Locale = Locale(identifier: "en-US")) {
         guard let recognizer = SFSpeechRecognizer(locale: locale) else {
             fatalError("Could not create SFSpeechRecognizer for locale \(locale)")
         }
@@ -47,7 +47,7 @@ public actor SpeechRecognitionService {
         #endif
     }
 
-    public func requestAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
+    func requestAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
         await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
                 continuation.resume(returning: status)
@@ -55,7 +55,7 @@ public actor SpeechRecognitionService {
         }
     }
 
-    public func startRecordingStream() throws -> AsyncThrowingStream<String, Error> {
+    func startRecordingStream() throws -> AsyncThrowingStream<String, Error> {
         // Cancel any existing recognition tasks
         recognitionTask?.cancel()
         recognitionTask = nil
@@ -129,7 +129,7 @@ public actor SpeechRecognitionService {
         }
     }
 
-    public func stopRecording() {
+    func stopRecording() {
         audioEngine.stop()
         audioEngine.inputNode.removeTap(onBus: 0)
 

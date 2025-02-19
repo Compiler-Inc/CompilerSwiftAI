@@ -4,11 +4,10 @@ import AuthenticationServices
 import SwiftUI
 
 /// Helper for Keychain operations
-public actor KeychainHelper: Actor {
-    public static let standard = KeychainHelper()
-    public init() {}
+actor KeychainHelper: Actor {
+    static let standard = KeychainHelper()
     
-    public func save(_ data: String, service: String, account: String) async {
+    func save(_ data: String, service: String, account: String) async {
         guard let data = data.data(using: .utf8) else { return }
         
         let query = [
@@ -29,7 +28,7 @@ public actor KeychainHelper: Actor {
         }
     }
     
-    public func read(service: String, account: String) async -> String? {
+    func read(service: String, account: String) async -> String? {
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: service,

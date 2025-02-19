@@ -4,14 +4,14 @@ import Foundation
 
 /// A convenience type to help manage conversation history with LLMs
 @available(macOS 14.0, iOS 17.0, *)
-public actor ChatHistory {
-    private var _messages: [Message]
-    private var messageID: UUID?
+actor ChatHistory {
+    var _messages: [Message]
+    var messageID: UUID?
     
     /// We'll store the active continuation if someone requests `messagesStream`.
-    private var continuation: AsyncStream<[Message]>.Continuation?
+    var continuation: AsyncStream<[Message]>.Continuation?
     
-    public var messages: [Message] {
+    var messages: [Message] {
         // Return all messages except those that are *still* streaming
         get async {
             _messages.filter { $0.state == .complete }
@@ -19,7 +19,7 @@ public actor ChatHistory {
     }
     
     /// A continuous stream of *all* messages, including .streaming states
-    public var messagesStream: AsyncStream<[Message]> {
+    var messagesStream: AsyncStream<[Message]> {
         AsyncStream { continuation in
             self.continuation = continuation
             // Immediately yield whatever we have
@@ -27,27 +27,27 @@ public actor ChatHistory {
         }
     }
     
-    public init(systemPrompt: String) {
+    init(systemPrompt: String) {
         self._messages = [Message(role: .system, content: systemPrompt)]
     }
     
-    private func notifyMessageUpdate() {
+    func notifyMessageUpdate() {
         continuation?.yield(_messages)
     }
     
-    public func addUserMessage(_ content: String) {
+    func addUserMessage(_ content: String) {
         _messages.append(Message(role: .user, content: content))
         notifyMessageUpdate()
     }
     
-    public func addAssistantMessage(_ content: String) {
+    func addAssistantMessage(_ content: String) {
         _messages.append(Message(role: .assistant, content: content))
         notifyMessageUpdate()
     }
     
     /// Start a new streaming response from the assistant
     @discardableResult
-    public func beginStreamingResponse() -> UUID {
+    func beginStreamingResponse() -> UUID {
         let id = UUID()
         let msg = Message(id: id, role: .assistant, content: "", state: .streaming(""))
         _messages.append(msg)
@@ -57,7 +57,7 @@ public actor ChatHistory {
     }
     
     /// Update the partial text of the *current* streaming assistant message
-    public func updateStreamingMessage(_ partial: String) {
+    func updateStreamingMessage(_ partial: String) {
         guard let id = messageID,
               let idx = _messages.firstIndex(where: { $0.id == id }) else {
             return
@@ -73,7 +73,7 @@ public actor ChatHistory {
     }
     
     /// Mark the streaming message complete with final text
-    public func completeStreamingMessage(_ finalContent: String) {
+    func completeStreamingMessage(_ finalContent: String) {
         guard let id = messageID,
               let idx = _messages.firstIndex(where: { $0.id == id }) else {
             return
@@ -88,7 +88,7 @@ public actor ChatHistory {
         notifyMessageUpdate()
     }
     
-    public func clearHistory(keepingSystemPrompt: Bool = true) {
+    func clearHistory(keepingSystemPrompt: Bool = true) {
         messageID = nil
         if keepingSystemPrompt, let systemMessage = _messages.first, systemMessage.role == .system {
             _messages = [systemMessage]
