@@ -11,6 +11,8 @@ public enum AuthError: Error {
 }
 
 extension CompilerClient {
+    /// Gets either the stored Apple ID Token or a refreshed one
+    /// - Returns: Token string
     public func getValidToken() async throws -> String {
         // First try to get the stored apple id token
            if let appleIdToken = await keychain.read(service: "apple-id-token", account: "user") {
@@ -27,8 +29,8 @@ extension CompilerClient {
     }
     
     public func authenticateWithServer(idToken: String) async throws -> String {
-        let lowercasedAppId = appID.uuidString.lowercased()
-        let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppId)/end-users/apple"
+        let lowercasedAppID = appID.uuidString.lowercased()
+        let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
         guard let url = URL(string: endpoint) else {
             authLogger.error("Invalid URL: \(self.baseURL)")
             throw AuthError.invalidResponse
@@ -79,9 +81,9 @@ extension CompilerClient {
     }
     
     public func attemptAutoLogin() async throws -> Bool {
-        if let storedAppleIdToken = await keychain.read(service: "apple-id-token", account: "user") {
+        if let storedToken = await keychain.read(service: "apple-id-token", account: "user") {
             do {
-                let accessToken = try await authenticateWithServer(idToken: storedAppleIdToken)
+                let accessToken = try await authenticateWithServer(idToken: storedToken)
                 await keychain.save(accessToken, service: "access-token", account: "user")
                 return true
             } catch AuthError.serverError("Invalid or expired Apple token") {
