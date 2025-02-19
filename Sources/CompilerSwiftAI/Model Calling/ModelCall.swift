@@ -27,6 +27,6 @@ struct ModelCallRequest: Codable {
 }
 
 struct ModelCallResponse: Codable, Sendable {
-    public let role: String
-    public let content: String
+    let role: String
+    let content: String
 }
