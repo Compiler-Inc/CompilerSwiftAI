@@ -2,11 +2,16 @@ import SwiftUI
 import Observation
 import MarkdownUI
 
-// MARK: - Chat Container
+public enum ChatInputType {
+    case text
+    case voice
+    case combined
+}
+
 @MainActor
 public struct ChatView: View {
     let viewModel: ChatViewModel
-    var style: ChatViewStyle
+    var style: ChatViewStyle = ChatViewStyle()
     let inputType: ChatInputType
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
@@ -34,14 +39,9 @@ public struct ChatView: View {
         return Array(userAndAssistantMessages[startIndex...])
     }
     
-    public init(
-        client: CompilerClient,
-        inputType: ChatInputType = .combined,
-        style: ChatViewStyle = ChatViewStyle()
-    ) {
+    public init(client: CompilerClient, inputType: ChatInputType = .combined) {
         self.viewModel = ChatViewModel(client: client)
         self.inputType = inputType
-        self.style = style
     }
 
     // MARK: - Input Views
