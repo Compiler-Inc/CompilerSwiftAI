@@ -95,21 +95,4 @@ extension CompilerClient {
         }
         return false
     }
-    
-    private func handleError(_ error: Error) -> String {
-        switch error {
-        case AuthError.invalidIdToken:
-            return "Failed to get Apple ID token"
-        case AuthError.networkError(let underlying):
-            return "Network error: \(underlying.localizedDescription)"
-        case AuthError.invalidResponse:
-            return "Invalid server response"
-        case AuthError.serverError(let message):
-            return "Server error: \(message)"
-        case AuthError.decodingError:
-            return "Failed to process server response"
-        default:
-            return "An unexpected error occurred"
-        }
-    }
 }
