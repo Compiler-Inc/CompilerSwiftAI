@@ -4,10 +4,10 @@ import Foundation
 
 public enum AuthError: Error {
     case invalidToken
-    case networkError(Error)
     case invalidResponse
-    case serverError(String)
     case decodingError
+    case networkError(Error)
+    case serverError(String)
 }
 
 extension CompilerClient {
@@ -80,6 +80,8 @@ extension CompilerClient {
         }
     }
     
+    /// Try to login, taking advantage of any still-valid access tokens
+    /// - Returns: Success state of the login
     public func attemptAutoLogin() async throws -> Bool {
         if let storedToken = await keychain.read(service: "apple-id-token", account: "user") {
             do {

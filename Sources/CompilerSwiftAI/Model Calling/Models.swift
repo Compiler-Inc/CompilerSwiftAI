@@ -1,10 +1,11 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
+/// AI Models supported by Compiler
 public enum ModelProvider: String, Codable, Sendable, Equatable {
-    case openai
-    case anthropic
-    case perplexity
-    case deepseek
+    case OpenAI
+    case Anthropic
+    case Perplexity
+    case DeepSeek
 }
 
 public enum OpenAIModel: String, Codable {

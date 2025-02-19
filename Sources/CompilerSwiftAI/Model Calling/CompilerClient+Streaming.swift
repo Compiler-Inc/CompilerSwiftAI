@@ -3,6 +3,7 @@
 import OSLog
 
 extension CompilerClient {
+    var streamingProviders: [ModelProvider] { [.OpenAI, .Anthropic] }
     
     // Backend streaming chunk format
     struct StreamChunk: Codable {
@@ -15,9 +16,8 @@ extension CompilerClient {
         messages: [Message],
         state: (any Codable & Sendable)? = nil
     ) -> AsyncThrowingStream<String, Error> {
-        // Verify provider supports streaming
-        guard metadata.provider == .openai || metadata.provider == .anthropic else {
-            return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only OpenAI and Anthropic support streaming")) }
+        guard streamingProviders.contains(metadata.provider) else {
+            return AsyncThrowingStream { $0.finish(throwing: AuthError.serverError("Only \(streamingProviders.map { $0.rawValue}.joined(separator: ", ")) support streaming")) }
         }
         
         modelLogger.debug("Starting streaming model call with \(messages.count) messages")

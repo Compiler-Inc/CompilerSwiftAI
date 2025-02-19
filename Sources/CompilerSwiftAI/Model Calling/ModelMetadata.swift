@@ -25,19 +25,19 @@ public struct ModelMetadata: Codable, Sendable, Equatable {
     
     // Convenience initializers for each provider's Models
     public static func openAI(_ model: OpenAIModel) -> ModelMetadata {
-        ModelMetadata(provider: .openai, id: model.rawValue)
+        ModelMetadata(provider: .OpenAI, id: model.rawValue)
     }
     
     public static func anthropic(_ model: AnthropicModel) -> ModelMetadata {
-        ModelMetadata(provider: .anthropic, id: model.rawValue)
+        ModelMetadata(provider: .Anthropic, id: model.rawValue)
     }
     
     public static func perplexity(_ model: PerplexityModel) -> ModelMetadata {
-        ModelMetadata(provider: .perplexity, id: model.rawValue)
+        ModelMetadata(provider: .Perplexity, id: model.rawValue)
     }
     
     public static func deepseek(_ model: DeepSeekModel) -> ModelMetadata {
-        ModelMetadata(provider: .deepseek, id: model.rawValue)
+        ModelMetadata(provider: .DeepSeek, id: model.rawValue)
     }
     
     public static func == (lhs: ModelMetadata, rhs: ModelMetadata) -> Bool {
