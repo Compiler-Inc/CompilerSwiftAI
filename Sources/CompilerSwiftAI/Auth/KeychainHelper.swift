@@ -4,7 +4,7 @@ import AuthenticationServices
 import SwiftUI
 
 /// Helper for Keychain operations
-actor KeychainHelper: Actor {
+actor KeychainHelper {
     static let standard = KeychainHelper()
     
     func save(_ data: String, service: String, account: String) async {
