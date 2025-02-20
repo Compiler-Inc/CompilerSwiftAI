@@ -8,9 +8,11 @@ let package = Package(
     products: [.library(name: "CompilerSwiftAI", targets: ["CompilerSwiftAI"])],
     dependencies: [
         .package(url: "https://github.com/gonzalezreal/swift-markdown-ui", from: "2.4.1"),
+        .package(url: "https://github.com/Compiler-Inc/SpeechRecognitionService", from: "0.1.0")
     ],
     targets: [
-        .target(name: "CompilerSwiftAI", dependencies: [.product(name: "MarkdownUI", package: "swift-markdown-ui")] ),
+        .target(name: "CompilerSwiftAI", dependencies: ["SpeechRecognitionService", .product(name: "MarkdownUI", package: "swift-markdown-ui")] ),
         .testTarget(name: "CompilerSwiftAITests", dependencies: ["CompilerSwiftAI"]),
     ]
 )
+

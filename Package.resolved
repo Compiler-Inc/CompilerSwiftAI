@@ -1,5 +1,5 @@
 {
-  "originHash" : "36414be71684ead7b664de7672baf8a385cb1dd73bfe136eead18e2e8cba7ee4",
+  "originHash" : "6c3abc734b9c38067aff9e4de6cbfb66e525e5986c1cc96fe562d4154ac8ebe1",
   "pins" : [
     {
       "identity" : "networkimage",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "2849f5323265386e200484b0d0f896e73c3411b9",
         "version" : "6.0.1"
+      }
+    },
+    {
+      "identity" : "speechrecognitionservice",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Compiler-Inc/SpeechRecognitionService",
+      "state" : {
+        "revision" : "01732012fa7a5f7f45ba52904147c82a7c3a94ad",
+        "version" : "0.1.0"
       }
     },
     {

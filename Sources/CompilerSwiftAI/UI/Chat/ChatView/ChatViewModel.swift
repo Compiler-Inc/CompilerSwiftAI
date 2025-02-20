@@ -1,5 +1,7 @@
 import SwiftUI
 import Speech
+import SpeechRecognitionService
+
 import OSLog
 
 // Example system prompt
@@ -9,7 +11,27 @@ let defaultSystemPrompt: String = """
 
 @MainActor
 @Observable
-class ChatViewModel {
+class ChatViewModel: SpeechRecognitionManaging {
+    
+    public var isRecording = false
+    public var transcribedText = ""
+    public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
+    public var error: Error?
+    
+    public let speechService: SpeechRecognitionService?
+    private var recordingTask: Task<Void, Never>?
+    
+    // Required protocol methods
+    public func requestAuthorization() async throws {
+        guard let speechService else {
+            throw SpeechRecognitionError.noRecognizer
+        }
+        authStatus = await speechService.requestAuthorization()
+        guard authStatus == .authorized else {
+            throw SpeechRecognitionError.notAuthorized
+        }
+    }
+    
     // MARK: - Properties
     var errorMessage: String?
     private var _userInput = ""  // Make private to control access
@@ -18,10 +40,7 @@ class ChatViewModel {
     
     /// The messages rendered by SwiftUI
     private(set) var messages: [Message] = []
-    
-    // Voice input handling
-    private let speechService: SpeechRecognitionService
-    
+        
     // ChatDataSource conformance
     var userInput: String {
         get { _userInput }
@@ -55,14 +74,11 @@ class ChatViewModel {
     
     /// Simple logger to show aggregator logs
     private let logger = Logger(subsystem: "ChatViewModel", category: "Aggregator")
-    
-    var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    var isRecording = false
-    
+        
     init(client: CompilerClient, systemPrompt: String = defaultSystemPrompt) {
         self.client = client
         self.systemPrompt = systemPrompt
-        self.speechService = SpeechRecognitionService()
+        self.speechService = SpeechRecognitionService(config: DefaultSpeechConfig())
         
         self.chatHistory = ChatHistory(systemPrompt: systemPrompt)
         
@@ -73,25 +89,18 @@ class ChatViewModel {
         }
     }
     
-    
-    func requestSpeechAuthorization() async {
-        authStatus = await speechService.requestAuthorization()
-    }
-    
     func toggleRecording() {
+        guard let speechService else {
+            error = SpeechRecognitionError.noRecognizer
+            return
+        }
+        
         if isRecording {
-            Task {
-                await speechService.stopRecording()
-                isRecording = false
-            }
+            recordingTask?.cancel()
+            recordingTask = nil
+            isRecording = false
         } else {
-            Task {
-                let authStatus = await speechService.requestAuthorization()
-                guard authStatus == .authorized else {
-                    errorMessage = "Speech recognition not authorized"
-                    return
-                }
-
+            recordingTask = Task {
                 do {
                     let stream = try await speechService.startRecordingStream()
                     isRecording = true

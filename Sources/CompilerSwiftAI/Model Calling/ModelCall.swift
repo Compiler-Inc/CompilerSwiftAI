@@ -11,12 +11,12 @@ struct APIMessage: Codable {
 /// Request format for model calls, matching the backend API contract
 struct ModelCallRequest: Codable {
     let provider: ModelProvider
-    let modelID: ModelID
+    let model: Model
     let messages: [APIMessage]
     
     init(using metadata: ModelMetadata, messages: [Message]) {
         self.provider = metadata.provider
-        self.modelID = metadata.modelID
+        self.model = metadata.model
         
         Logger.modelCalls.debug("Converting \(messages.count) messages to API format")
         let apiMessages = messages.map { message in

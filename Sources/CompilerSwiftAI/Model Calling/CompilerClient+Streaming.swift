@@ -3,7 +3,7 @@
 import OSLog
 
 extension CompilerClient {
-    var streamingProviders: [ModelProvider] { [.OpenAI, .Anthropic] }
+    var streamingProviders: [ModelProvider] { [.openai, .anthropic] }
     
     // Specialized String streaming version
     func makeStreamingModelCall(
@@ -129,9 +129,9 @@ extension CompilerClient {
         
         // Capture metadata values before the closure to prevent data races
         let provider = metadata.provider
-        let modelID = metadata.modelID
+        let model = metadata.model
         let capabilities = metadata.capabilities
-        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, modelID: modelID)
+        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, model: model)
         
         return AsyncThrowingStream { continuation in
             Task {

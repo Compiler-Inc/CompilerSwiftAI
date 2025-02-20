@@ -3,7 +3,7 @@
 import Combine
 import SwiftUI
 
-public typealias ModelID = String
+public typealias Model = String
 
 enum ModelCapability: String, Codable, Sendable, Equatable {
     case chat
@@ -13,35 +13,35 @@ enum ModelCapability: String, Codable, Sendable, Equatable {
 }
 
 struct ModelMetadata: Codable, Sendable, Equatable {
-    let modelID: ModelID
+    let model: Model
     let provider: ModelProvider
     let capabilities: [ModelCapability]
     
-    init(provider: ModelProvider, capabilities: [ModelCapability] = [.chat], modelID: ModelID) {
+    init(provider: ModelProvider, capabilities: [ModelCapability] = [.chat], model: Model) {
         self.provider = provider
         self.capabilities = capabilities
-        self.modelID = modelID
+        self.model = model
     }
     
     // Convenience initializers for each provider's Models
     static func openAI(_ model: OpenAIModel) -> ModelMetadata {
-        ModelMetadata(provider: .OpenAI, modelID: model.rawValue)
+        ModelMetadata(provider: .openai, model: model.rawValue)
     }
     
     static func anthropic(_ model: AnthropicModel) -> ModelMetadata {
-        ModelMetadata(provider: .Anthropic, modelID: model.rawValue)
+        ModelMetadata(provider: .anthropic, model: model.rawValue)
     }
     
     static func perplexity(_ model: PerplexityModel) -> ModelMetadata {
-        ModelMetadata(provider: .Perplexity, modelID: model.rawValue)
+        ModelMetadata(provider: .perplexity, model: model.rawValue)
     }
     
     static func deepseek(_ model: DeepSeekModel) -> ModelMetadata {
-        ModelMetadata(provider: .DeepSeek, modelID: model.rawValue)
+        ModelMetadata(provider: .deepseek, model: model.rawValue)
     }
     
     static func == (lhs: ModelMetadata, rhs: ModelMetadata) -> Bool {
-        lhs.modelID == rhs.modelID
+        lhs.model == rhs.model
         && lhs.provider == rhs.provider
         && lhs.capabilities == rhs.capabilities
     }

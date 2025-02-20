@@ -2,18 +2,61 @@
 
 import SwiftUI
 import Speech
+import SpeechRecognitionService
 
 @MainActor
 @Observable
-class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodable & Sendable> {
+class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: SpeechRecognitionManaging {
+    public var isRecording = false
+    public var transcribedText = ""
+    public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
+    public var error: Error?
+    
+    public let speechService: SpeechRecognitionService?
+    private var recordingTask: Task<Void, Never>?
+        
+    // Required protocol methods
+    public func requestAuthorization() async throws {
+        guard let speechService else {
+            throw SpeechRecognitionError.noRecognizer
+        }
+        authStatus = await speechService.requestAuthorization()
+        guard authStatus == .authorized else {
+            throw SpeechRecognitionError.notAuthorized
+        }
+    }
+    
+    public func toggleRecording() {
+        guard let speechService else {
+            error = SpeechRecognitionError.noRecognizer
+            return
+        }
+        
+        if isRecording {
+            recordingTask?.cancel()
+            recordingTask = nil
+            isRecording = false
+        } else {
+            recordingTask = Task {
+                do {
+                    isRecording = true
+                    let stream = try await speechService.startRecordingStream()
+                    
+                    for try await transcription in stream {
+                        inputText = transcription
+                    }
+                    
+                    isRecording = false
+                } catch {
+                    self.error = error
+                    isRecording = false
+                }
+            }
+        }
+    }
+    
     var inputText = ""
-    var isRecording = false
     var processingSteps: [ProcessingStep] = []
-
-    // Voice input handling
-    private let speechService: SpeechRecognitionService
-    var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
-    var errorMessage: String = ""
     
     var state: AppState
     var client: CompilerClient
@@ -22,53 +65,11 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
 
     
     init(state: AppState, client: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
-        self.speechService = SpeechRecognitionService()
+        self.speechService = SpeechRecognitionService(config: DefaultSpeechConfig())
         self.state = state
         self.client = client
         self.describe = describe
         self.execute = execute
-    }
-    
-    func requestSpeechAuthorization() async {
-        authStatus = await speechService.requestAuthorization()
-    }
-
-    func toggleRecording() {
-        if isRecording {
-            Task {
-                await speechService.stopRecording()
-                isRecording = false
-            }
-        } else {
-            Task {
-                let authStatus = await speechService.requestAuthorization()
-                guard authStatus == .authorized else {
-                    errorMessage = "Speech recognition not authorized"
-                    return
-                }
-                
-                do {
-                    let stream = try await speechService.startRecordingStream()
-                    isRecording = true
-                    
-                    for try await partialResult in stream {
-                        self.inputText = partialResult
-                    }
-                    
-                    // Stream completed (silence detected), send the complete transcription
-                    if !self.inputText.isEmpty {
-                        process(prompt: self.inputText)
-//                        sendMessage(self.inputText)
-//                        self.inputText = ""
-                    }
-                    
-                    isRecording = false
-                } catch {
-                    errorMessage = error.localizedDescription
-                    isRecording = false
-                }
-            }
-        }
     }
 
     func addStep(_ description: String) {
