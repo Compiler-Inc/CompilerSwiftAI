@@ -1,6 +1,6 @@
 import SwiftUI
 import Speech
-import SpeechRecognitionService
+import Transcriber
 
 import OSLog
 
@@ -11,24 +11,24 @@ let defaultSystemPrompt: String = """
 
 @MainActor
 @Observable
-class ChatViewModel: SpeechRecognitionManaging {
+class ChatViewModel: Transcribable {
     
     public var isRecording = false
     public var transcribedText = ""
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     public var error: Error?
     
-    public let speechService: SpeechRecognitionService?
+    public let transcriber: Transcriber?
     private var recordingTask: Task<Void, Never>?
     
     // Required protocol methods
     public func requestAuthorization() async throws {
-        guard let speechService else {
-            throw SpeechRecognitionError.noRecognizer
+        guard let transcriber else {
+            throw TranscriberError.noRecognizer
         }
-        authStatus = await speechService.requestAuthorization()
+        authStatus = await transcriber.requestAuthorization()
         guard authStatus == .authorized else {
-            throw SpeechRecognitionError.notAuthorized
+            throw TranscriberError.notAuthorized
         }
     }
     
@@ -78,7 +78,7 @@ class ChatViewModel: SpeechRecognitionManaging {
     init(client: CompilerClient, systemPrompt: String = defaultSystemPrompt) {
         self.client = client
         self.systemPrompt = systemPrompt
-        self.speechService = SpeechRecognitionService(config: DefaultSpeechConfig())
+        self.transcriber = Transcriber()
         
         self.chatHistory = ChatHistory(systemPrompt: systemPrompt)
         
@@ -90,8 +90,8 @@ class ChatViewModel: SpeechRecognitionManaging {
     }
     
     func toggleRecording() {
-        guard let speechService else {
-            error = SpeechRecognitionError.noRecognizer
+        guard let transcriber else {
+            error = TranscriberError.noRecognizer
             return
         }
         
@@ -102,7 +102,7 @@ class ChatViewModel: SpeechRecognitionManaging {
         } else {
             recordingTask = Task {
                 do {
-                    let stream = try await speechService.startRecordingStream()
+                    let stream = try await transcriber.startRecordingStream()
                     isRecording = true
                     
                     for try await partialResult in stream {

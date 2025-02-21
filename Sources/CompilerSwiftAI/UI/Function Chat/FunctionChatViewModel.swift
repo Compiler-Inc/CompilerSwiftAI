@@ -2,33 +2,33 @@
 
 import SwiftUI
 import Speech
-import SpeechRecognitionService
+import Transcriber
 
 @MainActor
 @Observable
-class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: SpeechRecognitionManaging {
+class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: Transcribable {
     public var isRecording = false
     public var transcribedText = ""
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     public var error: Error?
     
-    public let speechService: SpeechRecognitionService?
+    public let transcriber: Transcriber?
     private var recordingTask: Task<Void, Never>?
         
     // Required protocol methods
     public func requestAuthorization() async throws {
-        guard let speechService else {
-            throw SpeechRecognitionError.noRecognizer
+        guard let transcriber else {
+            throw TranscriberError.noRecognizer
         }
-        authStatus = await speechService.requestAuthorization()
+        authStatus = await transcriber.requestAuthorization()
         guard authStatus == .authorized else {
-            throw SpeechRecognitionError.notAuthorized
+            throw TranscriberError.notAuthorized
         }
     }
     
     public func toggleRecording() {
-        guard let speechService else {
-            error = SpeechRecognitionError.noRecognizer
+        guard let transcriber else {
+            error = TranscriberError.noRecognizer
             return
         }
         
@@ -40,7 +40,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
             recordingTask = Task {
                 do {
                     isRecording = true
-                    let stream = try await speechService.startRecordingStream()
+                    let stream = try await transcriber.startRecordingStream()
                     
                     for try await transcription in stream {
                         inputText = transcription
@@ -65,7 +65,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
 
     
     init(state: AppState, client: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
-        self.speechService = SpeechRecognitionService(config: DefaultSpeechConfig())
+        self.transcriber = Transcriber()
         self.state = state
         self.client = client
         self.describe = describe
