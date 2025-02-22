@@ -6,11 +6,24 @@ enum ModelProvider: String, Codable, Sendable, Equatable {
     case anthropic
     case perplexity
     case deepseek
+    case gemini
 }
 
 enum OpenAIModel: String, Codable {
     case gpt4o = "chatgpt-4o-latest"
     case gpt4oMini = "gpt-4o-mini"
+    case o1 = "o1"
+    case o1Mini = "o1-mini"
+    case o3Mini = "o3-mini"
+}
+
+enum GeminiModel: String, Codable {
+    case flash = "gemini-2.0-flash"
+    case flashLitePreview = "gemini-2.0-flash-lite-preview-02-05"
+    case flash15 = "gemini-1.5-flash"
+    case flash15_8b = "gemini-1.5-flash-8b"
+    case pro15 = "gemini-1.5-pro"
+    case textEmbedding = "text-embedding-004"
 }
 
 enum AnthropicModel: String, Codable {
