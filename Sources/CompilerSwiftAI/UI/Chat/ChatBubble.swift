@@ -49,7 +49,7 @@ struct ChatBubble: View {
         case .streaming(let partial):
             return partial
         case .complete:
-            return message.content
+            return message.apiContent
         }
     }
     

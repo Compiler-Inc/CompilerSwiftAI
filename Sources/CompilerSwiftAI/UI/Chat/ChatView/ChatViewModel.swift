@@ -198,7 +198,7 @@ class ChatViewModel: Transcribable {
                 var chunkCount = 0
                 for try await partialMessage in stream {
                     chunkCount += 1
-                    accumulated = partialMessage.content
+                    accumulated = partialMessage.apiContent
                     
                     // Log each chunk size
                     self.logger.log("Chunk #\(chunkCount): partial content size=\(accumulated.count). Updating streaming message.")
