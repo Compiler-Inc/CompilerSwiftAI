@@ -28,7 +28,7 @@ actor ChatHistory {
     }
     
     init(systemPrompt: String) {
-        self._messages = [Message(role: .system, content: systemPrompt)]
+        self._messages = [Message(role: .system, content: [.text(systemPrompt)])]
     }
     
     func notifyMessageUpdate() {
@@ -36,12 +36,12 @@ actor ChatHistory {
     }
     
     func addUserMessage(_ content: String) {
-        _messages.append(Message(role: .user, content: content))
+        _messages.append(Message(role: .user, content: [.text(content)]))
         notifyMessageUpdate()
     }
     
     func addAssistantMessage(_ content: String) {
-        _messages.append(Message(role: .assistant, content: content))
+        _messages.append(Message(role: .assistant, content: [.text(content)]))
         notifyMessageUpdate()
     }
     
@@ -49,7 +49,7 @@ actor ChatHistory {
     @discardableResult
     func beginStreamingResponse() -> UUID {
         let id = UUID()
-        let msg = Message(id: id, role: .assistant, content: "", state: .streaming(""))
+        let msg = Message(id: id, role: .assistant, content: [.text("")], state: .streaming(""))
         _messages.append(msg)
         messageID = id
         notifyMessageUpdate()
@@ -66,7 +66,7 @@ actor ChatHistory {
         _messages[idx] = Message(
             id: old.id,
             role: old.role,
-            content: partial,
+            content: [.text(partial)],
             state: .streaming(partial)
         )
         notifyMessageUpdate()
@@ -81,7 +81,7 @@ actor ChatHistory {
         _messages[idx] = Message(
             id: id,
             role: .assistant,
-            content: finalContent,
+            content: [.text(finalContent)],
             state: .complete
         )
         messageID = nil
