@@ -3,7 +3,7 @@
 import OSLog
 
 extension CompilerClient {
-    var streamingProviders: [ModelProvider] { [.openai, .anthropic] }
+    var streamingProviders: [ModelProvider] { [.openai, .anthropic, .gemini] }
     
     // Specialized String streaming version
     func makeStreamingModelCall(
@@ -35,17 +35,18 @@ extension CompilerClient {
            let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
             var modifiedMessages = messages
             let lastUserMessage = modifiedMessages[lastUserMessageIndex]
+            let stateContent = "\(lastUserMessage.apiContent)\n\nThe current app state is: \(state)"
             modifiedMessages[lastUserMessageIndex] = Message(
                 id: lastUserMessage.id,
                 role: .user,
-                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
+                content: [.text(stateContent)]
             )
             finalMessages = modifiedMessages
         } else {
             finalMessages = messages
         }
         
-        let body = ModelCallRequest(
+        let body = StreamRequest(
             using: metadata,
             messages: finalMessages
         )
@@ -131,7 +132,15 @@ extension CompilerClient {
         let provider = metadata.provider
         let model = metadata.model
         let capabilities = metadata.capabilities
-        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, model: model)
+        let temperature = metadata.temperature
+        let maxTokens = metadata.maxTokens
+        let capturedMetadata = ModelMetadata(
+            provider: provider,
+            capabilities: capabilities,
+            model: model,
+            temperature: temperature,
+            maxTokens: maxTokens
+        )
         
         return AsyncThrowingStream { continuation in
             Task {
@@ -142,14 +151,14 @@ extension CompilerClient {
                         state: state
                     )
                     
-                    var streamingMessage = Message(role: .assistant, content: "")
+                    var streamingMessage = Message(role: .assistant, content: [.text("")])
                     continuation.yield(streamingMessage)
                     
                     for try await chunk in stream {
                         streamingMessage = Message(
                             id: streamingMessage.id,
                             role: .assistant,
-                            content: streamingMessage.content + chunk
+                            content: [.text(streamingMessage.apiContent + chunk)]
                         )
                         continuation.yield(streamingMessage)
                     }
