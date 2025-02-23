@@ -1,18 +1,17 @@
-import SwiftUI
 import Speech
+import SwiftUI
 import Transcriber
 
 import OSLog
 
 // Example system prompt
 let defaultSystemPrompt: String = """
-        You are a helpful AI Assistant. Be direct, concise, and friendly.
-        """
+You are a helpful AI Assistant. Be direct, concise, and friendly. Always format your responses in valid Markdown.
+"""
 
 @MainActor
 @Observable
 class ChatViewModel: Transcribable {
-    
     public var isRecording = false
     public var transcribedText = ""
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
@@ -33,8 +32,9 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Properties
+
     var errorMessage: String?
-    private var _userInput = ""  // Make private to control access
+    private var _userInput = "" // Make private to control access
     var isStreaming = false
     var visibleMessageCount: Int = 15
     
@@ -83,7 +83,7 @@ class ChatViewModel: Transcribable {
         self.chatHistory = ChatHistory(systemPrompt: systemPrompt)
         
         // Start observing messages from chatHistory
-        messageStreamTask = Task.detached { [weak self] in
+        self.messageStreamTask = Task.detached { [weak self] in
             guard let self = self else { return }
             await self.observeMessageStream()
         }
@@ -125,6 +125,7 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Observe ChatHistory
+
     /// Continuously read `chatHistory.messagesStream` and publish changes to SwiftUI.
     private func observeMessageStream() async {
         let throttleInterval: TimeInterval = 0.15
@@ -193,7 +194,9 @@ class ChatViewModel: Transcribable {
                 let messagesSoFar = await self.chatHistory.messages
                 self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
                 
-                let stream = await self.client.streamModelResponse(using: .openAI(.gpt4oMini), messages: messagesSoFar)
+                // Get immutable streaming configuration
+                let config = await self.client.makeStreamingSession()
+                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
                 
                 var chunkCount = 0
                 for try await partialMessage in stream {
@@ -222,6 +225,7 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Clear Chat
+
     func clearChat() {
         logger.log("clearChat called. Clearing chat history.")
         Task.detached {

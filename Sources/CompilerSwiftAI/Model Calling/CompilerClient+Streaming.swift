@@ -3,7 +3,7 @@
 import OSLog
 
 extension CompilerClient {
-    var streamingProviders: [ModelProvider] { [.openai, .anthropic] }
+    var streamingProviders: [ModelProvider] { [.openai, .anthropic, .gemini] }
     
     // Specialized String streaming version
     func makeStreamingModelCall(
@@ -35,17 +35,18 @@ extension CompilerClient {
            let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
             var modifiedMessages = messages
             let lastUserMessage = modifiedMessages[lastUserMessageIndex]
+            let stateContent = "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
             modifiedMessages[lastUserMessageIndex] = Message(
                 id: lastUserMessage.id,
                 role: .user,
-                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
+                content: stateContent
             )
             finalMessages = modifiedMessages
         } else {
             finalMessages = messages
         }
         
-        let body = ModelCallRequest(
+        let body = StreamRequest(
             using: metadata,
             messages: finalMessages
         )
@@ -53,10 +54,11 @@ extension CompilerClient {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let jsonData = try encoder.encode(body)
-            request.httpBody = jsonData
             
-            modelLogger.debug("Streaming request body JSON: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
+            // AppId is only in the endpoint URL, not in query params or body
+            request.httpBody = try encoder.encode(body)
+            
+            modelLogger.debug("Streaming request body JSON: \(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "nil")")
         } catch {
             modelLogger.error("Failed to encode request: \(error)")
             return AsyncThrowingStream { $0.finish(throwing: error) }
@@ -104,9 +106,12 @@ extension CompilerClient {
                         // For non-empty content, trim just the leading space after "data:"
                         let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
                         modelLogger.debug("Content: \(trimmedContent.debugDescription)")
+                        modelLogger.debug("Yielding content of length: \(trimmedContent.count)")
                         
-                        // Yield the content
+                        // Yield the content directly - server handles JSON extraction
                         continuation.yield(trimmedContent)
+                        
+                        modelLogger.debug("Content yielded successfully")
                     }
                     
                     modelLogger.debug("SSE stream complete")
@@ -131,7 +136,15 @@ extension CompilerClient {
         let provider = metadata.provider
         let model = metadata.model
         let capabilities = metadata.capabilities
-        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, model: model)
+        let temperature = metadata.temperature
+        let maxTokens = metadata.maxTokens
+        let capturedMetadata = ModelMetadata(
+            provider: provider,
+            capabilities: capabilities,
+            model: model,
+            temperature: temperature,
+            maxTokens: maxTokens
+        )
         
         return AsyncThrowingStream { continuation in
             Task {

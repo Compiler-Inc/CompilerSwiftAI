@@ -6,12 +6,14 @@ extension CompilerClient {
     
     func makeModelCall(
         using metadata: ModelMetadata,
-        messages: [Message],
+        systemPrompt: String? = nil,
+        userPrompt: String,
         state: (any Codable & Sendable)? = nil
     ) async throws -> String {
         let response = try await makeModelCallWithResponse(
             using: metadata,
-            messages: messages,
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
             state: state
         )
         return response.content
@@ -19,18 +21,17 @@ extension CompilerClient {
     
     func makeModelCallWithResponse(
         using metadata: ModelMetadata,
-        messages: [Message],
+        systemPrompt: String? = nil,
+        userPrompt: String,
         state: (any Codable & Sendable)? = nil
-    ) async throws -> ModelCallResponse {
+    ) async throws -> CompletionResponse {
         let endpoint = "\(baseURL)/v1/apps/\(appID.uuidString)/end-users/model-call"
         guard let url = URL(string: endpoint) else {
             modelLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
         
-        modelLogger.debug("Making model call to: \(endpoint)")
-        modelLogger.debug("Using \(messages.count) messages")
-        modelLogger.debug("Message roles: \(messages.map { $0.role.rawValue })")
+        modelLogger.debug("Making completion model call to: \(endpoint)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -39,25 +40,13 @@ extension CompilerClient {
         let token = try await getValidToken()
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        // If state is provided, append it to the last user message
-        let finalMessages: [Message]
-        if let state = state,
-           let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
-            var modifiedMessages = messages
-            let lastUserMessage = modifiedMessages[lastUserMessageIndex]
-            modifiedMessages[lastUserMessageIndex] = Message(
-                id: lastUserMessage.id,
-                role: .user,
-                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
-            )
-            finalMessages = modifiedMessages
-        } else {
-            finalMessages = messages
-        }
+        // If state is provided, append it to the userPrompt
+        let finalUserPrompt = state.map { "\(userPrompt)\n\nThe current app state is: \($0)" } ?? userPrompt
         
-        let body = ModelCallRequest(
+        let body = CompletionRequest(
             using: metadata,
-            messages: finalMessages
+            systemPrompt: systemPrompt,
+            userPrompt: finalUserPrompt
         )
         
         let encoder = JSONEncoder()
@@ -86,6 +75,6 @@ extension CompilerClient {
             throw AuthError.serverError("Model call failed with status \(httpResponse.statusCode)")
         }
         
-        return try JSONDecoder().decode(ModelCallResponse.self, from: data)
+        return try JSONDecoder().decode(CompletionResponse.self, from: data)
     }
 }
