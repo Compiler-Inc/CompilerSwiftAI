@@ -1,18 +1,17 @@
-import SwiftUI
 import Speech
+import SwiftUI
 import Transcriber
 
 import OSLog
 
 // Example system prompt
 let defaultSystemPrompt: String = """
-        You are a helpful AI Assistant. Be direct, concise, and friendly.
-        """
+You are a helpful AI Assistant. Be direct, concise, and friendly. Always format your responses in valid Markdown.
+"""
 
 @MainActor
 @Observable
 class ChatViewModel: Transcribable {
-    
     public var isRecording = false
     public var transcribedText = ""
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
@@ -33,8 +32,9 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Properties
+
     var errorMessage: String?
-    private var _userInput = ""  // Make private to control access
+    private var _userInput = "" // Make private to control access
     var isStreaming = false
     var visibleMessageCount: Int = 15
     
@@ -83,7 +83,7 @@ class ChatViewModel: Transcribable {
         self.chatHistory = ChatHistory(systemPrompt: systemPrompt)
         
         // Start observing messages from chatHistory
-        messageStreamTask = Task.detached { [weak self] in
+        self.messageStreamTask = Task.detached { [weak self] in
             guard let self = self else { return }
             await self.observeMessageStream()
         }
@@ -125,6 +125,7 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Observe ChatHistory
+
     /// Continuously read `chatHistory.messagesStream` and publish changes to SwiftUI.
     private func observeMessageStream() async {
         let throttleInterval: TimeInterval = 0.15
@@ -200,7 +201,7 @@ class ChatViewModel: Transcribable {
                 var chunkCount = 0
                 for try await partialMessage in stream {
                     chunkCount += 1
-                    accumulated = partialMessage.apiContent
+                    accumulated = partialMessage.content
                     
                     // Log each chunk size
                     self.logger.log("Chunk #\(chunkCount): partial content size=\(accumulated.count). Updating streaming message.")
@@ -224,6 +225,7 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Clear Chat
+
     func clearChat() {
         logger.log("clearChat called. Clearing chat history.")
         Task.detached {

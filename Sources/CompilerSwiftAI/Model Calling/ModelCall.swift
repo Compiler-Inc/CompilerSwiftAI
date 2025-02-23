@@ -80,20 +80,3 @@ struct CompletionResponse: Codable, Sendable {
 struct StreamChunk: Codable, Sendable {
     let content: String
 }
-
-// Helper for encoding/decoding Message content arrays for the API
-extension Message {
-    var apiContent: String {
-        content.map { content in
-            switch content.content {
-            case .text(let text):
-                return text
-            case .image(let image):
-                return """
-                    [Image: \(image.mimeType.rawValue), 
-                     Base64: \(image.base64Data.prefix(20))...]
-                    """
-            }
-        }.joined(separator: "\n")
-    }
-}

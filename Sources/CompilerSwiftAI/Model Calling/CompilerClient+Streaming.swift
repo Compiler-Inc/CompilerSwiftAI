@@ -35,11 +35,11 @@ extension CompilerClient {
            let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
             var modifiedMessages = messages
             let lastUserMessage = modifiedMessages[lastUserMessageIndex]
-            let stateContent = "\(lastUserMessage.apiContent)\n\nThe current app state is: \(state)"
+            let stateContent = "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
             modifiedMessages[lastUserMessageIndex] = Message(
                 id: lastUserMessage.id,
                 role: .user,
-                content: [.text(stateContent)]
+                content: stateContent
             )
             finalMessages = modifiedMessages
         } else {
@@ -155,14 +155,14 @@ extension CompilerClient {
                         state: state
                     )
                     
-                    var streamingMessage = Message(role: .assistant, content: [.text("")])
+                    var streamingMessage = Message(role: .assistant, content: "")
                     continuation.yield(streamingMessage)
                     
                     for try await chunk in stream {
                         streamingMessage = Message(
                             id: streamingMessage.id,
                             role: .assistant,
-                            content: [.text(streamingMessage.apiContent + chunk)]
+                            content: streamingMessage.content + chunk
                         )
                         continuation.yield(streamingMessage)
                     }
