@@ -14,54 +14,6 @@ struct Message: Codable, Sendable, Identifiable, Equatable {
         case assistant
     }
     
-    enum ContentType: String, Codable {
-        case text
-        case image
-    }
-    
-    struct Content: Codable, Equatable {
-        let type: ContentType
-        let content: ContentData
-        
-        enum ContentData: Codable, Equatable {
-            case text(String)
-            case image(ImageContent)
-            
-            func encode(to encoder: Encoder) throws {
-                var container = encoder.singleValueContainer()
-                switch self {
-                case .text(let text):
-                    try container.encode(text)
-                case .image(let imageContent):
-                    try container.encode(imageContent)
-                }
-            }
-            
-            init(from decoder: Decoder) throws {
-                let container = try decoder.singleValueContainer()
-                if let text = try? container.decode(String.self) {
-                    self = .text(text)
-                } else if let imageContent = try? container.decode(ImageContent.self) {
-                    self = .image(imageContent)
-                } else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode ContentData")
-                }
-            }
-        }
-    }
-    
-    struct ImageContent: Codable, Equatable {
-        let base64Data: String
-        let mimeType: MimeType
-        
-        enum MimeType: String, Codable {
-            case jpeg = "image/jpeg"
-            case png = "image/png"
-            case gif = "image/gif"
-            case webp = "image/webp"
-        }
-    }
-    
     enum MessageState: Codable, Sendable, Equatable {
         case complete
         case streaming(String)
@@ -105,16 +57,3 @@ struct Message: Codable, Sendable, Identifiable, Equatable {
         try container.encode(content, forKey: .content)
     }
 }
-
-// Convenience extensions for creating messages
-extension Message.Content {
-    static func text(_ text: String) -> Self {
-        Message.Content(type: .text, content: .text(text))
-    }
-    
-    static func image(base64: String, mimeType: Message.ImageContent.MimeType) -> Self {
-        let imageContent = Message.ImageContent(base64Data: base64, mimeType: mimeType)
-        return Message.Content(type: .image, content: .image(imageContent))
-    }
-}
-
