@@ -193,7 +193,9 @@ class ChatViewModel: Transcribable {
                 let messagesSoFar = await self.chatHistory.messages
                 self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
                 
-                let stream = await self.client.streamModelResponse(using: .openAI(.gpt4oMini), messages: messagesSoFar)
+                // Get immutable streaming configuration
+                let config = await self.client.makeStreamingSession()
+                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
                 
                 var chunkCount = 0
                 for try await partialMessage in stream {

@@ -9,6 +9,24 @@ struct Message: Codable, Sendable, Identifiable, Equatable {
     let content: [Content]
     var state: MessageState
     
+    private enum CodingKeys: String, CodingKey {
+        case role, content
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = UUID()  // Generate new UUID on decode since we don't send it
+        self.role = try container.decode(Role.self, forKey: .role)
+        self.content = try container.decode([Content].self, forKey: .content)
+        self.state = .complete  // Default to complete state when decoding
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(role, forKey: .role)
+        try container.encode(content, forKey: .content)
+    }
+    
     enum Role: String, Codable, Sendable {
         case system
         case user
@@ -28,33 +46,24 @@ struct Message: Codable, Sendable, Identifiable, Equatable {
             case text(String)
             case image(ImageContent)
             
-            private enum CodingKeys: String, CodingKey {
-                case type, content
-            }
-            
             func encode(to encoder: Encoder) throws {
-                var container = encoder.container(keyedBy: CodingKeys.self)
+                var container = encoder.singleValueContainer()
                 switch self {
                 case .text(let text):
-                    try container.encode(text, forKey: .content)
+                    try container.encode(text)
                 case .image(let imageContent):
-                    try container.encode(imageContent, forKey: .content)
+                    try container.encode(imageContent)
                 }
             }
             
             init(from decoder: Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                let type = try container.decode(String.self, forKey: .type)
-                
-                switch type {
-                case "text":
-                    let text = try container.decode(String.self, forKey: .content)
+                let container = try decoder.singleValueContainer()
+                if let text = try? container.decode(String.self) {
                     self = .text(text)
-                case "image":
-                    let imageContent = try container.decode(ImageContent.self, forKey: .content)
+                } else if let imageContent = try? container.decode(ImageContent.self) {
                     self = .image(imageContent)
-                default:
-                    throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown content type")
+                } else {
+                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode ContentData")
                 }
             }
         }

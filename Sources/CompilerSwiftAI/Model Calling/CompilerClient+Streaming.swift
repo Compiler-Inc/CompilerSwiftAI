@@ -54,10 +54,11 @@ extension CompilerClient {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let jsonData = try encoder.encode(body)
-            request.httpBody = jsonData
             
-            modelLogger.debug("Streaming request body JSON: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
+            // AppId is only in the endpoint URL, not in query params or body
+            request.httpBody = try encoder.encode(body)
+            
+            modelLogger.debug("Streaming request body JSON: \(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "nil")")
         } catch {
             modelLogger.error("Failed to encode request: \(error)")
             return AsyncThrowingStream { $0.finish(throwing: error) }
@@ -105,9 +106,12 @@ extension CompilerClient {
                         // For non-empty content, trim just the leading space after "data:"
                         let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
                         modelLogger.debug("Content: \(trimmedContent.debugDescription)")
+                        modelLogger.debug("Yielding content of length: \(trimmedContent.count)")
                         
-                        // Yield the content
+                        // Yield the content directly - server handles JSON extraction
                         continuation.yield(trimmedContent)
+                        
+                        modelLogger.debug("Content yielded successfully")
                     }
                     
                     modelLogger.debug("SSE stream complete")
