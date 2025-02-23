@@ -130,7 +130,7 @@ class ChatViewModel: Transcribable {
     private func observeMessageStream() async {
         let throttleInterval: TimeInterval = 0.15
         var lastUpdateTime = Date.distantPast
-        var lastMessages: [Message] = []
+//        var lastMessages: [Message] = []
         
         logger.log("observeMessageStream started. Now waiting for new messages...")
 
@@ -143,33 +143,33 @@ class ChatViewModel: Transcribable {
             logger.log("Received newMessages from actor, count = \(newMessages.count). Checking diff...")
             
             // 1) Check if the array is truly different from what we last published
-            guard newMessages != lastMessages else {
-                logger.log("No diff from lastMessages (count=\(lastMessages.count)). Skipping update to avoid spam.")
-                continue
-            }
+//            guard newMessages != lastMessages else {
+//                logger.log("No diff from lastMessages (count=\(lastMessages.count)). Skipping update to avoid spam.")
+//                continue
+//            }
             
             // 2) If we have *too many updates in quick succession*, we do a small throttle
-            let now = Date()
-            let elapsed = now.timeIntervalSince(lastUpdateTime)
-            let needed = throttleInterval - elapsed
-            if needed > 0 {
-                logger.log("Throttling. Sleeping for \(String(format: "%.2f", needed))s")
-                try? await Task.sleep(nanoseconds: UInt64(needed * 1_000_000_000))
-                
-                // Check again after sleep if task was cancelled
-                guard !Task.isCancelled else { break }
-            }
-            
+//            let now = Date()
+//            let elapsed = now.timeIntervalSince(lastUpdateTime)
+//            let needed = throttleInterval - elapsed
+//            if needed > 0 {
+//                logger.log("Throttling. Sleeping for \(String(format: "%.2f", needed))s")
+//                try? await Task.sleep(nanoseconds: UInt64(needed * 1_000_000_000))
+//                
+//                // Check again after sleep if task was cancelled
+//                guard !Task.isCancelled else { break }
+//            }
+//            
             // 3) Now actually publish these messages to SwiftUI
             logger.log("Publishing updated messages to SwiftUI. count=\(newMessages.count)")
             await MainActor.run {
                 // Only update if the messages are still different
-                guard self.messages != newMessages else { return }
+//                guard self.messages != newMessages else { return }
                 self.messages = newMessages
             }
             
-            lastMessages = newMessages
-            lastUpdateTime = now
+//            lastMessages = newMessages
+//            lastUpdateTime = now
         }
         
         logger.log("observeMessageStream completed or was cancelled.")

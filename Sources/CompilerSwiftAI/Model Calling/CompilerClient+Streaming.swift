@@ -85,32 +85,16 @@ extension CompilerClient {
                     }
                     
                     for try await line in asyncBytes.lines {
-                        modelLogger.debug("Raw SSE line [\(line.count) bytes]: \(line)")
+                        modelLogger.debug("Raw SSE line: \(line)")
                         
-                        // Skip non-SSE lines (like id: lines)
-                        guard line.hasPrefix("data:") else {
-                            modelLogger.debug("Skipping non-SSE line")
+                        guard let content = try parseChatResponse(from: line) else {
                             continue
                         }
                         
-                        // Get everything after "data:"
-                        let content = String(line.dropFirst("data:".count))
+                        modelLogger.debug("Content: \(content.debugDescription)")
                         
-                        // If it's just a space or empty after "data:", yield a newline
-                        if content.trimmingCharacters(in: .whitespaces).isEmpty {
-                            modelLogger.debug("Empty data line - yielding newline")
-                            continuation.yield("\n")
-                            continue
-                        }
-                        
-                        // For non-empty content, trim just the leading space after "data:"
-                        let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
-                        modelLogger.debug("Content: \(trimmedContent.debugDescription)")
-                        modelLogger.debug("Yielding content of length: \(trimmedContent.count)")
-                        
-                        // Yield the content directly - server handles JSON extraction
-                        continuation.yield(trimmedContent)
-                        
+                        continuation.yield(content)
+
                         modelLogger.debug("Content yielded successfully")
                     }
                     
@@ -173,6 +157,42 @@ extension CompilerClient {
                     continuation.finish(throwing: error)
                 }
             }
+        }
+    }
+    
+    private func parseChatResponse(from line: String) throws -> String? {
+        // Skip empty lines and comments
+        guard !line.isEmpty, !line.hasPrefix(":") else {
+            return nil
+        }
+        
+        // Extract the data part from the SSE format
+        guard line.hasPrefix("data: ") else {
+            return nil
+        }
+        
+        let jsonString = String(line.dropFirst(6))
+        
+        guard let parsedResponse = try? parseEventMessage(from: jsonString) else {
+            print("Couldn't parse repsonse")
+            return nil
+        }
+        
+        return parsedResponse.content
+    }
+    
+    private func parseEventMessage(from line: String) throws -> ChatResponseDTO? {
+        guard let data = line.data(using: .utf8) else {
+            print("[ChatStreamer] ❌ Failed to convert string to data: \(line)")
+            return nil
+        }
+
+        do {
+            let message = try JSONDecoder().decode(ChatResponseDTO.self, from: data)
+            return message
+        } catch {
+            print("[ChatStreamer] ❌ JSON decode error: \(error)")
+            return nil
         }
     }
 }
