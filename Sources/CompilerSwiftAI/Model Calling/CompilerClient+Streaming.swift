@@ -2,6 +2,10 @@
 
 import OSLog
 
+struct ChatResponseDataTransferObject: Decodable {
+    let content: String
+}
+
 extension CompilerClient {
     var streamingProviders: [ModelProvider] { [.openai, .anthropic, .gemini] }
     
@@ -181,14 +185,14 @@ extension CompilerClient {
         return parsedResponse.content
     }
     
-    private func parseEventMessage(from line: String) throws -> ChatResponseDTO? {
+    private func parseEventMessage(from line: String) throws -> ChatResponseDataTransferObject? {
         guard let data = line.data(using: .utf8) else {
             print("[ChatStreamer] ❌ Failed to convert string to data: \(line)")
             return nil
         }
 
         do {
-            let message = try JSONDecoder().decode(ChatResponseDTO.self, from: data)
+            let message = try JSONDecoder().decode(ChatResponseDataTransferObject.self, from: data)
             return message
         } catch {
             print("[ChatStreamer] ❌ JSON decode error: \(error)")
