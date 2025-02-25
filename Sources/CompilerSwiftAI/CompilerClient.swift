@@ -10,6 +10,10 @@ public final actor CompilerClient {
         /// Whether to enable debug logging
         public var enableDebugLogging: Bool
         
+        /// Initialize a new Configuration instance
+        /// - Parameters:
+        ///   - streamingChat: The streaming configuration to use for chat interactions, defaults to OpenAI GPT-4
+        ///   - enableDebugLogging: Whether to enable detailed debug logging output, defaults to false
         public init(
             streamingChat: StreamConfiguration = .openAI(.gpt4o),
             enableDebugLogging: Bool = false
@@ -24,8 +28,8 @@ public final actor CompilerClient {
     
     private(set) var configuration: Configuration
 
-//    internal let baseURL: String = "https://backend.compiler.inc"
-    internal let baseURL: String = "http://localhost:3000"
+    internal let baseURL: String = "https://backend.compiler.inc"
+//    internal let baseURL: String = "http://localhost:3000"
     internal let keychain: KeychainHelper = KeychainHelper.standard
     internal let functionLogger: DebugLogger
     internal let modelLogger: DebugLogger
