@@ -103,18 +103,18 @@ public extension StreamConfiguration {
         ))
     }
     
-    /// Create a Gemini streaming configuration
+    /// Create a Google streaming configuration
     /// - Parameters:
     ///   - model: The Gemini model to use
     ///   - temperature: Optional temperature parameter (0.0 - 1.0)
     ///   - maxTokens: Optional maximum tokens to generate
-    static func gemini(
+    static func google(
         _ model: GeminiModel,
         temperature: Float? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(
-            provider: .gemini,
+            provider: .google,
             model: model.rawValue,
             temperature: temperature,
             maxTokens: maxTokens

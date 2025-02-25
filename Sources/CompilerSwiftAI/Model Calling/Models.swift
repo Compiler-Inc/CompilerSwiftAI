@@ -6,7 +6,7 @@ public enum ModelProvider: String, Codable, Sendable, Equatable {
     case anthropic
     case perplexity
     case deepseek
-    case gemini
+    case google
 }
 
 public enum OpenAIModel: String, Codable {

@@ -48,8 +48,8 @@ struct ModelMetadata: Codable, Sendable, Equatable {
         ModelMetadata(provider: .deepseek, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
     
-    static func gemini(_ model: GeminiModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
-        ModelMetadata(provider: .gemini, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
+    static func google(_ model: GeminiModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+        ModelMetadata(provider: .google, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
     
     static func == (lhs: ModelMetadata, rhs: ModelMetadata) -> Bool {
