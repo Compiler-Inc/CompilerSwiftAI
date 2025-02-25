@@ -28,7 +28,7 @@ extension CompilerClient {
         throw AuthError.invalidToken
     }
     
-    func authenticateWithServer(idToken: String) async throws -> String {
+    func authenticateWithServer(idToken: String, nonce: String? = nil) async throws -> String {
         let lowercasedAppID = appID.uuidString.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
         guard let url = URL(string: endpoint) else {
@@ -36,13 +36,15 @@ extension CompilerClient {
             throw AuthError.invalidResponse
         }
         
+        var body: [String: String] = ["id_token": idToken]
+        if let nonce {
+            body["nonce"] = nonce
+        }
         authLogger.debug("Making auth request to: \(endpoint)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let body = ["id_token": idToken]
         request.httpBody = try JSONEncoder().encode(body)
         
         authLogger.debug("Request body: \(body)")

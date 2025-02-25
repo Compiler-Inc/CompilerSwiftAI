@@ -7,7 +7,7 @@ struct ChatResponseDataTransferObject: Decodable {
 }
 
 extension CompilerClient {
-    var streamingProviders: [ModelProvider] { [.openai, .anthropic, .gemini] }
+    var streamingProviders: [ModelProvider] { [.openai, .anthropic, .google] }
     
     // Specialized String streaming version
     func makeStreamingModelCall(

@@ -3,7 +3,7 @@
 import AuthenticationServices
 
 extension CompilerClient {
-    public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>) async throws -> Bool {
+    public func handleSignInWithApple(_ result: Result<ASAuthorization, Error>, nonce: String?) async throws -> Bool {
         switch result {
         case .success(let auth):
             guard let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
@@ -12,11 +12,15 @@ extension CompilerClient {
                 throw AuthError.invalidToken
             }
             
-            // Store Apple ID token - this acts as our "refresh token"
-            // Apple ID tokens can be reused for a while (usually days to weeks)
+            // Store Apple ID token
             await keychain.save(idToken, service: "apple-id-token", account: "user")
             
-            let accessToken = try await authenticateWithServer(idToken: idToken)
+            // Store the nonce for verification
+            if let nonce = nonce {
+                await keychain.save(nonce, service: "apple-nonce", account: "user")
+            }
+            
+            let accessToken = try await authenticateWithServer(idToken: idToken, nonce: nonce)
             await keychain.save(accessToken, service: "access-token", account: "user")
             
             return true
