@@ -4,7 +4,7 @@ Swift Package for Compiler Inc's AI Backend API
 
 ## Getting started
 
-Login to the [Compiler Developer Dshboard](https://developer.compiler.inc/) and choose "Create a new app".  Give it a name and description and you will be given an API key. Save that API key, this is the only time it will be shown to you. 
+Login to the [Compiler Developer Dashboard](https://developer.compiler.inc/) and choose "Create a new app".  Give it a name and description and you will be given an API key. Save that API key, this is the only time it will be shown to you. 
 
 On the next page you will see an app ID. You will use that in your code and set up functions for use with Compiler inside your own project next.
 
@@ -20,7 +20,7 @@ At some central location, in your code set up a client:
 
 Next you create an enum for "CompilerFunction".  This enum conforms `Sendable` and contains a case for each function you're making available.  for example:
 
-```
+```swift
 enum CompilerFunction: Sendable {
     case doSomething
     case doSomethingElse
@@ -32,7 +32,7 @@ Note that parameters supported are: `String`, `Double`, `Float`, `Int`, `Bool`, 
 
 But, you'll want to add tradtional Swift-style documentation generating comments as well, because these will be use in a later step to help train the AI to best respond to your users. For instance:
 
-```
+```swift
 enum CompilerFunction: Sendable {
     /// Users can invoke this function to make something happen
     case doSomething
@@ -56,7 +56,7 @@ There are more things that you'll want to add to the CompilerFunction enum, but 
 
 On the same page that you got your AppID you will see you available functions, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Function Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunction` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
 
-```
+```swift
 static func from(_ function: Function<Parameter>) -> CompilerFunction? {
     ...
 }
@@ -74,11 +74,11 @@ Update `describe` with words that describe the actions. This will be used in the
 
 Somewhere in your SwiftUI app, add the `ChatView` SwiftUI view:
 
-```
+```swift
  ChatView(state: CurrentState(bpm: metronome.tempo),
-                    dlm: dlm,
-                    describe: describe(function:),
-                    execute: execute(function:))
+          dlm: dlm,
+          describe: describe(function:),
+          execute: execute(function:))
 ```
 
 The `describe` function was already created for you.  The execute function is where you finally perform the actions that were requested. 
