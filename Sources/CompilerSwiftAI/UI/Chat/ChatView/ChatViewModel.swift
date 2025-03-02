@@ -1,18 +1,17 @@
-import SwiftUI
 import Speech
+import SwiftUI
 import Transcriber
 
 import OSLog
 
 // Example system prompt
 let defaultSystemPrompt: String = """
-        You are a helpful AI Assistant. Be direct, concise, and friendly.
-        """
+You are a helpful AI Assistant. Be direct, concise, and friendly. Always format your responses in valid Markdown.
+"""
 
 @MainActor
 @Observable
 class ChatViewModel: Transcribable {
-    
     public var isRecording = false
     public var transcribedText = ""
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
@@ -33,8 +32,9 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Properties
+
     var errorMessage: String?
-    private var _userInput = ""  // Make private to control access
+    private var _userInput = "" // Make private to control access
     var isStreaming = false
     var visibleMessageCount: Int = 15
     
@@ -83,7 +83,7 @@ class ChatViewModel: Transcribable {
         self.chatHistory = ChatHistory(systemPrompt: systemPrompt)
         
         // Start observing messages from chatHistory
-        messageStreamTask = Task.detached { [weak self] in
+        self.messageStreamTask = Task.detached { [weak self] in
             guard let self = self else { return }
             await self.observeMessageStream()
         }
@@ -125,12 +125,9 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Observe ChatHistory
+
     /// Continuously read `chatHistory.messagesStream` and publish changes to SwiftUI.
     private func observeMessageStream() async {
-        let throttleInterval: TimeInterval = 0.15
-        var lastUpdateTime = Date.distantPast
-        var lastMessages: [Message] = []
-        
         logger.log("observeMessageStream started. Now waiting for new messages...")
 
         // Continuously receive updates from chatHistory
@@ -141,34 +138,12 @@ class ChatViewModel: Transcribable {
             // Log how many messages we got
             logger.log("Received newMessages from actor, count = \(newMessages.count). Checking diff...")
             
-            // 1) Check if the array is truly different from what we last published
-            guard newMessages != lastMessages else {
-                logger.log("No diff from lastMessages (count=\(lastMessages.count)). Skipping update to avoid spam.")
-                continue
-            }
-            
-            // 2) If we have *too many updates in quick succession*, we do a small throttle
-            let now = Date()
-            let elapsed = now.timeIntervalSince(lastUpdateTime)
-            let needed = throttleInterval - elapsed
-            if needed > 0 {
-                logger.log("Throttling. Sleeping for \(String(format: "%.2f", needed))s")
-                try? await Task.sleep(nanoseconds: UInt64(needed * 1_000_000_000))
-                
-                // Check again after sleep if task was cancelled
-                guard !Task.isCancelled else { break }
-            }
-            
-            // 3) Now actually publish these messages to SwiftUI
+
+            // Now actually publish these messages to SwiftUI
             logger.log("Publishing updated messages to SwiftUI. count=\(newMessages.count)")
             await MainActor.run {
-                // Only update if the messages are still different
-                guard self.messages != newMessages else { return }
                 self.messages = newMessages
             }
-            
-            lastMessages = newMessages
-            lastUpdateTime = now
         }
         
         logger.log("observeMessageStream completed or was cancelled.")
@@ -193,7 +168,9 @@ class ChatViewModel: Transcribable {
                 let messagesSoFar = await self.chatHistory.messages
                 self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
                 
-                let stream = await self.client.streamModelResponse(using: .openAI(.gpt4oMini), messages: messagesSoFar)
+                // Get immutable streaming configuration
+                let config = await self.client.makeStreamingSession()
+                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
                 
                 var chunkCount = 0
                 for try await partialMessage in stream {
@@ -222,6 +199,7 @@ class ChatViewModel: Transcribable {
     }
     
     // MARK: - Clear Chat
+
     func clearChat() {
         logger.log("clearChat called. Clearing chat history.")
         Task.detached {

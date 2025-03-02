@@ -2,8 +2,12 @@
 
 import OSLog
 
+struct ChatResponseDataTransferObject: Decodable {
+    let content: String
+}
+
 extension CompilerClient {
-    var streamingProviders: [ModelProvider] { [.openai, .anthropic] }
+    var streamingProviders: [ModelProvider] { [.openai, .anthropic, .google] }
     
     // Specialized String streaming version
     func makeStreamingModelCall(
@@ -35,17 +39,18 @@ extension CompilerClient {
            let lastUserMessageIndex = messages.lastIndex(where: { $0.role == .user }) {
             var modifiedMessages = messages
             let lastUserMessage = modifiedMessages[lastUserMessageIndex]
+            let stateContent = "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
             modifiedMessages[lastUserMessageIndex] = Message(
                 id: lastUserMessage.id,
                 role: .user,
-                content: "\(lastUserMessage.content)\n\nThe current app state is: \(state)"
+                content: stateContent
             )
             finalMessages = modifiedMessages
         } else {
             finalMessages = messages
         }
         
-        let body = ModelCallRequest(
+        let body = StreamRequest(
             using: metadata,
             messages: finalMessages
         )
@@ -53,10 +58,11 @@ extension CompilerClient {
         do {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let jsonData = try encoder.encode(body)
-            request.httpBody = jsonData
             
-            modelLogger.debug("Streaming request body JSON: \(String(data: jsonData, encoding: .utf8) ?? "nil")")
+            // AppId is only in the endpoint URL, not in query params or body
+            request.httpBody = try encoder.encode(body)
+            
+            modelLogger.debug("Streaming request body JSON: \(String(data: request.httpBody ?? Data(), encoding: .utf8) ?? "nil")")
         } catch {
             modelLogger.error("Failed to encode request: \(error)")
             return AsyncThrowingStream { $0.finish(throwing: error) }
@@ -83,30 +89,17 @@ extension CompilerClient {
                     }
                     
                     for try await line in asyncBytes.lines {
-                        modelLogger.debug("Raw SSE line [\(line.count) bytes]: \(line)")
+                        modelLogger.debug("Raw SSE line: \(line)")
                         
-                        // Skip non-SSE lines (like id: lines)
-                        guard line.hasPrefix("data:") else {
-                            modelLogger.debug("Skipping non-SSE line")
+                        guard let content = try parseChatResponse(from: line) else {
                             continue
                         }
                         
-                        // Get everything after "data:"
-                        let content = String(line.dropFirst("data:".count))
+                        modelLogger.debug("Content: \(content.debugDescription)")
                         
-                        // If it's just a space or empty after "data:", yield a newline
-                        if content.trimmingCharacters(in: .whitespaces).isEmpty {
-                            modelLogger.debug("Empty data line - yielding newline")
-                            continuation.yield("\n")
-                            continue
-                        }
-                        
-                        // For non-empty content, trim just the leading space after "data:"
-                        let trimmedContent = content.hasPrefix(" ") ? String(content.dropFirst()) : content
-                        modelLogger.debug("Content: \(trimmedContent.debugDescription)")
-                        
-                        // Yield the content
-                        continuation.yield(trimmedContent)
+                        continuation.yield(content)
+
+                        modelLogger.debug("Content yielded successfully")
                     }
                     
                     modelLogger.debug("SSE stream complete")
@@ -131,7 +124,15 @@ extension CompilerClient {
         let provider = metadata.provider
         let model = metadata.model
         let capabilities = metadata.capabilities
-        let capturedMetadata = ModelMetadata(provider: provider, capabilities: capabilities, model: model)
+        let temperature = metadata.temperature
+        let maxTokens = metadata.maxTokens
+        let capturedMetadata = ModelMetadata(
+            provider: provider,
+            capabilities: capabilities,
+            model: model,
+            temperature: temperature,
+            maxTokens: maxTokens
+        )
         
         return AsyncThrowingStream { continuation in
             Task {
@@ -160,6 +161,42 @@ extension CompilerClient {
                     continuation.finish(throwing: error)
                 }
             }
+        }
+    }
+    
+    private func parseChatResponse(from line: String) throws -> String? {
+        // Skip empty lines and comments
+        guard !line.isEmpty, !line.hasPrefix(":") else {
+            return nil
+        }
+        
+        // Extract the data part from the SSE format
+        guard line.hasPrefix("data: ") else {
+            return nil
+        }
+        
+        let jsonString = String(line.dropFirst(6))
+        
+        guard let parsedResponse = try? parseEventMessage(from: jsonString) else {
+            print("Couldn't parse repsonse")
+            return nil
+        }
+        
+        return parsedResponse.content
+    }
+    
+    private func parseEventMessage(from line: String) throws -> ChatResponseDataTransferObject? {
+        guard let data = line.data(using: .utf8) else {
+            print("[ChatStreamer] ❌ Failed to convert string to data: \(line)")
+            return nil
+        }
+
+        do {
+            let message = try JSONDecoder().decode(ChatResponseDataTransferObject.self, from: data)
+            return message
+        } catch {
+            print("[ChatStreamer] ❌ JSON decode error: \(error)")
+            return nil
         }
     }
 }
