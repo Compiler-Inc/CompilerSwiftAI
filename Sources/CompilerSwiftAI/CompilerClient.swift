@@ -28,8 +28,7 @@ public final actor CompilerClient {
     
     private(set) var configuration: Configuration
 
-//    internal let baseURL: String = "https://backend.compiler.inc"
-    internal let baseURL: String = "http://localhost:3000"
+    internal let baseURL: String = "https://backend.compiler.inc"
     internal let keychain: KeychainHelper = KeychainHelper.standard
     internal let functionLogger: DebugLogger
     internal let modelLogger: DebugLogger
