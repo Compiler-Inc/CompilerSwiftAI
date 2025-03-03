@@ -62,4 +62,62 @@ public final actor CompilerClient {
     public func makeStreamingSession() -> StreamConfiguration {
         configuration.streamingChat
     }
+    
+    /// Generate text from a prompt using the specified model
+    /// - Parameters:
+    ///   - prompt: The input prompt
+    ///   - model: The model configuration to use
+    ///   - systemPrompt: Optional system prompt to set context
+    /// - Returns: The complete model response including tokens used, finish reason, etc.
+    public func generateText(
+        prompt: String,
+        using model: StreamConfiguration,
+        systemPrompt: String? = nil
+    ) async throws -> CompletionResponse {
+        try await makeModelCallWithResponse(
+            using: model.metadata,
+            systemPrompt: systemPrompt,
+            userPrompt: prompt
+        )
+    }
+    
+    /// Stream text generation from a prompt
+    /// - Parameters:
+    ///   - prompt: The input prompt
+    ///   - model: The model configuration to use
+    ///   - systemPrompt: Optional system prompt to set context
+    /// - Returns: An async stream of response chunks with metadata
+    public func streamText(
+        prompt: String,
+        using model: StreamConfiguration,
+        systemPrompt: String? = nil
+    ) async -> AsyncThrowingStream<String, Error> {
+        let message = Message(role: .user, content: prompt)
+        let messages = systemPrompt.map { [Message(role: .system, content: $0), message] } ?? [message]
+        return makeStreamingModelCall(using: model.metadata, messages: messages)
+    }
+    
+    /// Process a natural language command into structured function calls
+    /// - Parameters:
+    ///   - command: The natural language command to process
+    /// - Returns: Array of functions with their parameters
+    /// - Note: You must specify the Parameters type when calling this function, either through type annotation or explicit generic parameter:
+    ///   ```swift
+    ///   // Option 1: Type annotation
+    ///   let functions: [Function<MyParameters>] = try await client.processFunctionCall("Add todo")
+    ///
+    ///   // Option 2: Explicit generic
+    ///   let functions = try await client.processFunctionCall<MyParameters>("Add todo")
+    ///   ```
+    public func processFunctionCall<Parameters: Decodable & Sendable>(
+        _ command: String
+    ) async throws -> [Function<Parameters>] {
+        // We use an empty state since this is the simplified version
+        try await processFunction(command, for: EmptyState(), using: "")
+    }
 }
+
+private struct EmptyState: Encodable, Sendable {
+    // Empty state for simplified function calls
+}
+
