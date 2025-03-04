@@ -24,14 +24,14 @@ struct CompletionRequest: ModelCallRequestBase {
     let userPrompt: String
     let temperature: Float?
     let maxTokens: Int?
-    
+
     init(using metadata: ModelMetadata, systemPrompt: String? = nil, userPrompt: String) {
-        self.provider = metadata.provider
-        self.model = metadata.model
+        provider = metadata.provider
+        model = metadata.model
         self.systemPrompt = systemPrompt
         self.userPrompt = userPrompt
-        self.temperature = metadata.temperature
-        self.maxTokens = metadata.maxTokens
+        temperature = metadata.temperature
+        maxTokens = metadata.maxTokens
     }
 }
 
@@ -42,21 +42,21 @@ struct StreamRequest: ModelCallRequestBase {
     let messages: [Message]
     let temperature: Float?
     let maxTokens: Int?
-    
+
     init(using metadata: ModelMetadata, messages: [Message]) {
-        self.provider = metadata.provider
-        self.model = metadata.model
+        provider = metadata.provider
+        model = metadata.model
         self.messages = messages
-        self.temperature = metadata.temperature
-        self.maxTokens = metadata.maxTokens
-        
+        temperature = metadata.temperature
+        maxTokens = metadata.maxTokens
+
         Logger.modelCalls.debug("Preparing stream request with \(messages.count) messages")
     }
-    
+
     private enum CodingKeys: String, CodingKey {
         case provider, model, messages, temperature, maxTokens
     }
-    
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(provider, forKey: .provider)

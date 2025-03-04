@@ -12,7 +12,7 @@ extension ChatView {
             makeCombinedInput()
         }
     }
-    
+
     func makeTextOnlyInput() -> some View {
         GrowingTextField(
             placeholder: style.inputFieldPlaceholder,
@@ -31,14 +31,14 @@ extension ChatView {
         .padding(.horizontal, style.horizontalPadding)
         .padding(.vertical, 8)
     }
-    
+
     func makeVoiceOnlyInput() -> some View {
         makeVoiceButton()
             .frame(maxWidth: .infinity)
             .padding(.horizontal, style.horizontalPadding)
             .padding(.vertical, 8)
     }
-    
+
     func makeCombinedInput() -> some View {
         GrowingTextField(
             placeholder: style.inputFieldPlaceholder,
@@ -59,7 +59,7 @@ extension ChatView {
         .padding(.horizontal, style.horizontalPadding)
         .padding(.vertical, 8)
     }
-    
+
     func makeVoiceButton() -> some View {
         Button {
             viewModel.toggleRecording()
@@ -71,7 +71,7 @@ extension ChatView {
         }
         .disabled(viewModel.isStreaming)
     }
-    
+
     func makeSendButton() -> some View {
         Button(action: sendCurrentInput) {
             style.sendButtonImage

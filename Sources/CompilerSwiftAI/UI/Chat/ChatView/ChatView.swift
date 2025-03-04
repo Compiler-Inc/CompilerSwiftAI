@@ -1,5 +1,5 @@
-import SwiftUI
 import MarkdownUI
+import SwiftUI
 
 public enum ChatInputType {
     case text
@@ -10,12 +10,12 @@ public enum ChatInputType {
 @MainActor
 public struct ChatView: View {
     let viewModel: ChatViewModel
-    var style: ChatViewStyle = ChatViewStyle()
+    var style: ChatViewStyle = .init()
     let inputType: ChatInputType
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
     @State var isRecording = false
-    
+
     // Bubble styling properties
     var userBubbleColor: Color = .blue
     var assistantBubbleColor: Color = .clear
@@ -25,32 +25,33 @@ public struct ChatView: View {
     var assistantTypingColor: Color = .gray.opacity(0.7)
     var bubbleCornerRadius: CGFloat = 16
     var bubblePadding: EdgeInsets?
-    
+
     // Markdown theme customization
     var markdownTheme: ((Theme) -> Theme)?
-    
+
     var visibleMessages: [Message] {
         // First filter out system messages
         let userAndAssistantMessages = viewModel.messages.filter { $0.role != .system }
-        
+
         // Then apply our visible message count limit
         let startIndex = max(0, userAndAssistantMessages.count - viewModel.visibleMessageCount)
         return Array(userAndAssistantMessages[startIndex...])
     }
-    
+
     public init(client: CompilerClient, inputType: ChatInputType = .combined) {
-        self.viewModel = ChatViewModel(client: client)
+        viewModel = ChatViewModel(client: client)
         self.inputType = inputType
     }
 
     // MARK: - Input Views
+
     func sendCurrentInput() {
         guard !viewModel.userInputBinding.wrappedValue.isEmpty else { return }
         let input = viewModel.userInputBinding.wrappedValue
         viewModel.userInputBinding.wrappedValue = ""
         viewModel.sendMessage(input)
     }
-    
+
     public var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottomTrailing) {
@@ -86,7 +87,7 @@ public struct ChatView: View {
                         scrollViewProxy = proxy
                     }
                 }
-                
+
                 if showScrollButton {
                     Button {
                         withAnimation(.spring(duration: 0.3)) {
@@ -104,7 +105,7 @@ public struct ChatView: View {
                     .transition(.scale.combined(with: .opacity))
                 }
             }
-            
+
             makeInputView()
         }
     }

@@ -13,7 +13,7 @@ public extension ChatView {
         container.userTypingColor = typingIndicatorColor ?? textColor.opacity(0.7)
         return container
     }
-    
+
     func assistantBubbleStyle(
         backgroundColor: Color,
         textColor: Color,
@@ -25,25 +25,25 @@ public extension ChatView {
         container.assistantTypingColor = typingIndicatorColor ?? textColor.opacity(0.7)
         return container
     }
-    
+
     func bubbleCornerRadius(_ radius: CGFloat) -> ChatView {
         var container = self
         container.bubbleCornerRadius = radius
         return container
     }
-    
+
     func bubblePadding(_ padding: EdgeInsets) -> ChatView {
         var container = self
         container.bubblePadding = padding
         return container
     }
-    
+
     func markdownTheme(_ transform: @escaping (Theme) -> Theme) -> ChatView {
         var container = self
         container.markdownTheme = transform
         return container
     }
-    
+
     func inputFieldStyle(
         backgroundColor: Color,
         textColor: Color,
@@ -65,7 +65,7 @@ public extension ChatView {
         container.style = modifiedStyle
         return container
     }
-    
+
     func inputButtonStyle(
         size: CGFloat? = nil,
         padding: CGFloat? = nil,
@@ -81,7 +81,7 @@ public extension ChatView {
     ) -> ChatView {
         var container = self
         var modifiedStyle = style
-        
+
         // Common properties
         if let size = size {
             modifiedStyle.inputButtonSize = size
@@ -89,7 +89,7 @@ public extension ChatView {
         if let padding = padding {
             modifiedStyle.inputButtonPadding = padding
         }
-        
+
         // Send button specific
         if let sendImage = sendImage {
             modifiedStyle.sendButtonImage = sendImage
@@ -100,7 +100,7 @@ public extension ChatView {
         if let sendBackgroundColor = sendBackgroundColor {
             modifiedStyle.sendButtonBackgroundColor = sendBackgroundColor
         }
-        
+
         // Voice button specific
         if let voiceImage = voiceImage {
             modifiedStyle.voiceButtonImage = voiceImage
@@ -120,7 +120,7 @@ public extension ChatView {
         if let voiceActiveBackgroundColor = voiceActiveBackgroundColor {
             modifiedStyle.voiceButtonActiveBackgroundColor = voiceActiveBackgroundColor
         }
-        
+
         container.style = modifiedStyle
         return container
     }
