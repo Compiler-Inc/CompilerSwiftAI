@@ -9,6 +9,7 @@ import Transcriber
 class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: Transcribable {
     public var isRecording = false
     public var transcribedText = ""
+    public var rmsLevel: Float = 0
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     public var error: Error?
 
@@ -45,7 +46,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                     for try await signal in stream {
                         switch signal {
                         case let .rms(float):
-                            print("float: \(float)")
+                            rmsLevel = float
                         case let .transcription(string):
                             inputText = string
                         }
