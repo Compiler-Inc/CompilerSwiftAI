@@ -24,7 +24,7 @@ extension CompilerClient {
         // Prepare all the non-async parts of the request before the Task
         let endpoint = "\(baseURL)/v1/apps/\(appID.uuidString)/end-users/model-call/stream"
         guard let url = URL(string: endpoint) else {
-            modelLogger.error("Invalid URL: \(baseURL)")
+            modelLogger.error("Invalid URL: \(self.baseURL)")
             return AsyncThrowingStream { $0.finish(throwing: URLError(.badURL)) }
         }
 
