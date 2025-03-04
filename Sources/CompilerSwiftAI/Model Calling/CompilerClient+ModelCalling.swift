@@ -26,7 +26,7 @@ extension CompilerClient {
     ) async throws -> CompletionResponse {
         let endpoint = "\(baseURL)/v1/apps/\(appID.uuidString)/end-users/model-call"
         guard let url = URL(string: endpoint) else {
-            modelLogger.error("Invalid URL: \(self.self.baseURL)")
+            modelLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
 
