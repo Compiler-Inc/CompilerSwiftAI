@@ -5,13 +5,13 @@ import Foundation
 /// Configuration for streaming chat sessions
 public struct StreamConfiguration: Sendable {
     // Internal access to metadata
-    internal let metadata: ModelMetadata
-    
+    let metadata: ModelMetadata
+
     // Internal init for SDK use
-    internal init(metadata: ModelMetadata) {
+    init(metadata: ModelMetadata) {
         self.metadata = metadata
     }
-    
+
     /// Create a streaming configuration with raw values
     public init(
         provider: ModelProvider,
@@ -19,7 +19,7 @@ public struct StreamConfiguration: Sendable {
         temperature: Float? = nil,
         maxTokens: Int? = nil
     ) {
-        self.metadata = ModelMetadata(
+        metadata = ModelMetadata(
             provider: provider,
             capabilities: [.chat],
             model: model,
@@ -30,6 +30,7 @@ public struct StreamConfiguration: Sendable {
 }
 
 // MARK: - Public Factory Methods
+
 public extension StreamConfiguration {
     /// Create an OpenAI streaming configuration
     /// - Parameters:
@@ -48,7 +49,7 @@ public extension StreamConfiguration {
             maxTokens: maxTokens
         ))
     }
-    
+
     /// Create an Anthropic streaming configuration
     /// - Parameters:
     ///   - model: The Anthropic model to use
@@ -66,7 +67,7 @@ public extension StreamConfiguration {
             maxTokens: maxTokens
         ))
     }
-    
+
     /// Create a Perplexity streaming configuration
     /// - Parameters:
     ///   - model: The Perplexity model to use
@@ -84,7 +85,7 @@ public extension StreamConfiguration {
             maxTokens: maxTokens
         ))
     }
-    
+
     /// Create a DeepSeek streaming configuration
     /// - Parameters:
     ///   - model: The DeepSeek model to use
@@ -102,7 +103,7 @@ public extension StreamConfiguration {
             maxTokens: maxTokens
         ))
     }
-    
+
     /// Create a Google streaming configuration
     /// - Parameters:
     ///   - model: The Gemini model to use
@@ -120,4 +121,4 @@ public extension StreamConfiguration {
             maxTokens: maxTokens
         ))
     }
-} 
+}

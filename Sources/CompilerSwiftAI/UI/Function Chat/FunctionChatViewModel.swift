@@ -1,7 +1,7 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
-import SwiftUI
 import Speech
+import SwiftUI
 import Transcriber
 
 @MainActor
@@ -12,10 +12,10 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
     public var rmsLevel: Float = 0
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     public var error: Error?
-    
+
     public let transcriber: Transcriber?
     private var recordingTask: Task<Void, Never>?
-        
+
     // Required protocol methods
     public func requestAuthorization() async throws {
         guard let transcriber else {
@@ -26,13 +26,13 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
             throw TranscriberError.notAuthorized
         }
     }
-    
+
     public func toggleRecording() {
         guard let transcriber else {
             error = TranscriberError.noRecognizer
             return
         }
-        
+
         if isRecording {
             recordingTask?.cancel()
             recordingTask = nil
@@ -42,16 +42,16 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                 do {
                     isRecording = true
                     let stream = try await transcriber.startStream()
-                    
+
                     for try await signal in stream {
                         switch signal {
-                            case .rms(let float):
-                                rmsLevel = float
-                            case .transcription(let string):
-                                inputText = string
+                        case let .rms(float):
+                            rmsLevel = float
+                        case let .transcription(string):
+                            inputText = string
                         }
                     }
-                    
+
                     isRecording = false
                 } catch {
                     self.error = error
@@ -60,18 +60,17 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
             }
         }
     }
-    
+
     var inputText = ""
     var processingSteps: [ProcessingStep] = []
-    
+
     var state: AppState
     var client: CompilerClient
     var describe: (Function<Parameters>) -> String
     var execute: (Function<Parameters>) -> Void
 
-    
     init(state: AppState, client: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
-        self.transcriber = Transcriber()
+        transcriber = Transcriber()
         self.state = state
         self.client = client
         self.describe = describe
@@ -87,7 +86,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
         processingSteps[index].isComplete = true
         inputText = ""
     }
-    
+
     func process(prompt: String) {
         Task {
             addStep("Sending request to Compiler")

@@ -12,7 +12,7 @@ public enum ModelProvider: String, Codable, Sendable, Equatable {
 public enum OpenAIModel: String, Codable {
     case gpt4o = "chatgpt-4o-latest"
     case gpt4oMini = "gpt-4o-mini"
-    case o1 = "o1"
+    case o1
     case o1Mini = "o1-mini"
     case o3Mini = "o3-mini"
 }
@@ -35,8 +35,9 @@ public enum AnthropicModel: String, Codable {
 public enum PerplexityModel: String, Codable {
     case sonarReasoning = "sonar-reasoning"
     case sonarPro = "sonar-pro"
-    case sonar = "sonar"
-} 
+    case sonar
+}
+
 public enum DeepSeekModel: String, Codable {
     case chat = "deepseek-chat"
     case reasoner = "deepseek-reasoner"

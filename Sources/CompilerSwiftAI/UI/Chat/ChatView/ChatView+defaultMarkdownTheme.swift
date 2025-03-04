@@ -4,7 +4,7 @@ import SwiftUI
 extension ChatView {
     func defaultMarkdownTheme(for message: Message) -> Theme {
         let foregroundColor = message.role == .user ? userTextColor : assistantTextColor
-        
+
         return Theme()
             .text {
                 ForegroundColor(foregroundColor)
@@ -70,7 +70,7 @@ extension ChatView {
                 configuration.label
                     .markdownMargin(top: .em(0.25))
             }
-            .bulletedListMarker { configuration in
+            .bulletedListMarker { _ in
                 Text("•")
                     .foregroundColor(foregroundColor)
                     .relativeFrame(minWidth: .em(1.5), alignment: .trailing)
