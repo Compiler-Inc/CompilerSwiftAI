@@ -32,7 +32,7 @@ extension CompilerClient {
         let lowercasedAppID = appID.uuidString.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
         guard let url = URL(string: endpoint) else {
-            authLogger.error("Invalid URL: \(baseURL)")
+            authLogger.error("Invalid URL: \(self.baseURL)")
             throw AuthError.invalidResponse
         }
 
