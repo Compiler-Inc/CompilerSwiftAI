@@ -6,7 +6,7 @@ import Foundation
 @available(macOS 14.0, iOS 17.0, *)
 actor ChatHistory {
     var _messages: [Message]
-    var messageID: UUID?
+    var messageID: String?
 
     /// We'll store the active continuation if someone requests `messagesStream`.
     var continuation: AsyncStream<[Message]>.Continuation?
@@ -14,7 +14,7 @@ actor ChatHistory {
     var messages: [Message] {
         // Return all messages except those that are *still* streaming
         get async {
-            _messages.filter { $0.state == .complete }
+            _messages
         }
     }
 
@@ -28,7 +28,7 @@ actor ChatHistory {
     }
 
     init(systemPrompt: String) {
-        _messages = [Message(role: .system, content: systemPrompt)]
+        _messages = [Message.systemMessage(content: systemPrompt)]
     }
 
     func notifyMessageUpdate() {
@@ -36,24 +36,23 @@ actor ChatHistory {
     }
 
     func addUserMessage(_ content: String) {
-        _messages.append(Message(role: .user, content: content))
+        _messages.append(Message.userMessage(content: content))
         notifyMessageUpdate()
     }
 
     func addAssistantMessage(_ content: String) {
-        _messages.append(Message(role: .assistant, content: content))
+        _messages.append(Message.assistantMessage(content: content))
         notifyMessageUpdate()
     }
 
     /// Start a new streaming response from the assistant
     @discardableResult
-    func beginStreamingResponse() -> UUID {
-        let id = UUID()
-        let msg = Message(id: id, role: .assistant, content: "", state: .streaming(""))
+    func beginStreamingResponse() -> String {
+        let msg = Message.assistantMessage(content: "")
         _messages.append(msg)
-        messageID = id
+        messageID = msg.id
         notifyMessageUpdate()
-        return id
+        return msg.id
     }
 
     /// Update the partial text of the *current* streaming assistant message
@@ -67,8 +66,7 @@ actor ChatHistory {
         _messages[idx] = Message(
             id: old.id,
             role: old.role,
-            content: partial,
-            state: .streaming(partial)
+            content: old.content + partial
         )
         notifyMessageUpdate()
     }
@@ -83,8 +81,7 @@ actor ChatHistory {
         _messages[idx] = Message(
             id: id,
             role: .assistant,
-            content: finalContent,
-            state: .complete
+            content: finalContent
         )
         messageID = nil
         notifyMessageUpdate()

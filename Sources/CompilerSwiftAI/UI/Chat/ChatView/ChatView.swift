@@ -9,12 +9,25 @@ public enum ChatInputType {
 
 @MainActor
 public struct ChatView: View {
+    enum Item: Identifiable {
+        case message(message: Message, isStreaming: Bool)
+        
+        var id: String {
+            switch self {
+            case let .message(message, _):
+                return message.id
+            }
+        }
+    }
+    
     let viewModel: ChatViewModel
     var style: ChatViewStyle = .init()
     let inputType: ChatInputType
+    
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
     @State var isRecording = false
+    @State private var items: [Item] = []
 
     // Bubble styling properties
     var userBubbleColor: Color = .blue
@@ -28,15 +41,6 @@ public struct ChatView: View {
 
     // Markdown theme customization
     var markdownTheme: ((Theme) -> Theme)?
-
-    var visibleMessages: [Message] {
-        // First filter out system messages
-        let userAndAssistantMessages = viewModel.messages.filter { $0.role != .system }
-
-        // Then apply our visible message count limit
-        let startIndex = max(0, userAndAssistantMessages.count - viewModel.visibleMessageCount)
-        return Array(userAndAssistantMessages[startIndex...])
-    }
 
     public init(client: CompilerClient, inputType: ChatInputType = .combined) {
         viewModel = ChatViewModel(client: client)
@@ -57,31 +61,34 @@ public struct ChatView: View {
             ZStack(alignment: .bottomTrailing) {
                 ScrollViewReader { proxy in
                     ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(visibleMessages) { message in
-                                ChatBubble(message: message)
-                                    .bubbleBackground(
-                                        RoundedRectangle(cornerRadius: bubbleCornerRadius),
-                                        color: message.role == .user ? userBubbleColor : assistantBubbleColor
-                                    )
-                                    .bubbleForegroundColor(message.role == .user ? userTextColor : assistantTextColor)
-                                    .typingIndicator(
-                                        color: message.role == .user ? userTypingColor : assistantTypingColor
-                                    )
-                                    .if(bubblePadding != nil) { view in
-                                        view.bubblePadding(bubblePadding!)
+                        VStack(spacing: 12) {
+                            ForEach(items) { item in
+                                switch item {
+                                    case let .message(message, isStreaming):
+                                    if isStreaming {
+                                        TypingIndicator(style: .init())
+                                    } else {
+                                        ChatBubble(message: message, style: .init())
+                                            .bubbleBackground(
+                                                RoundedRectangle(cornerRadius: bubbleCornerRadius),
+                                                color: message.role == .user ? userBubbleColor : assistantBubbleColor
+                                            )
+                                            .bubbleForegroundColor(message.role == .user ? userTextColor : assistantTextColor)
+                                            .typingIndicator(
+                                                color: message.role == .user ? userTypingColor : assistantTypingColor
+                                            )
+                                            .if(bubblePadding != nil) { view in
+                                                view.bubblePadding(bubblePadding!)
+                                            }
+                                            .markdownTheme(markdownTheme?(defaultMarkdownTheme(for: message)) ?? defaultMarkdownTheme(for: message))
+                                            .id(message.id)
+                                            .transition(.opacity)
                                     }
-                                    .markdownTheme(markdownTheme?(defaultMarkdownTheme(for: message)) ?? defaultMarkdownTheme(for: message))
-                                    .id(message.id)
-                                    .transition(.opacity)
+                                }
                             }
-                            Color.clear
-                                .frame(height: 1)
-                                .id("bottom")
                         }
                         .padding(.horizontal, style.horizontalPadding)
                     }
-                    .coordinateSpace(name: "scroll")
                     .scrollIndicators(.hidden)
                     .onAppear {
                         scrollViewProxy = proxy

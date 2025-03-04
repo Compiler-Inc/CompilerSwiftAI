@@ -53,7 +53,7 @@ extension CompilerClient {
 
         let body = StreamRequest(
             using: metadata,
-            messages: finalMessages
+            messages: finalMessages.map({ MessageDTO(message: $0) })
         )
 
         do {
@@ -144,7 +144,7 @@ extension CompilerClient {
                         state: state
                     )
 
-                    var streamingMessage = Message(role: .assistant, content: "")
+                    var streamingMessage = Message.assistantMessage(content: "")
                     continuation.yield(streamingMessage)
 
                     for try await chunk in stream {
