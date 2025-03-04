@@ -16,16 +16,16 @@ extension CompilerClient {
     ///   - state: Current state of your app (as defined by the developer, only needs to conform to Encodable and Sendable)
     ///   - token: Authorization token
     /// - Returns: An array of functions with Parameters that are both Decodable and Sendable
-    public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ prompt: String, for state: State, using token: String) async throws -> [Function<Parameters>] {
+    public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ prompt: String, for state: State, using _: String) async throws -> [Function<Parameters>] {
         functionLogger.debug("Starting processFunction with prompt: \(prompt)")
 
         let endpoint = "\(baseURL)/v1/function-call/\(appID.uuidString)"
-        
+
         guard let url = URL(string: endpoint) else {
             functionLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
-        
+
         functionLogger.debug("URL created: \(url)")
 
         let request = Request(id: appID.uuidString, prompt: prompt, state: state)
@@ -33,7 +33,7 @@ extension CompilerClient {
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+
         // Get a fresh token
         let token = try await getValidToken()
         urlRequest.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -64,7 +64,4 @@ extension CompilerClient {
             throw error
         }
     }
-
-
-
 }

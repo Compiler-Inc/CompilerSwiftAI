@@ -9,7 +9,7 @@ public final actor CompilerClient {
         public var streamingChat: StreamConfiguration
         /// Whether to enable debug logging
         public var enableDebugLogging: Bool
-        
+
         /// Initialize a new Configuration instance
         /// - Parameters:
         ///   - streamingChat: The streaming configuration to use for chat interactions, defaults to OpenAI GPT-4
@@ -22,33 +22,33 @@ public final actor CompilerClient {
             self.enableDebugLogging = enableDebugLogging
         }
     }
-    
+
     /// Application ID (retrievable from the Comiler Developer Dashboard)
     let appID: UUID
-    
+
     private(set) var configuration: Configuration
 
-    internal let baseURL: String = "https://backend.compiler.inc"
-    internal let keychain: KeychainHelper = KeychainHelper.standard
-    internal let functionLogger: DebugLogger
-    internal let modelLogger: DebugLogger
-    internal let authLogger: DebugLogger
-    
+    let baseURL: String = "https://backend.compiler.inc"
+    let keychain: KeychainHelper = .standard
+    let functionLogger: DebugLogger
+    let modelLogger: DebugLogger
+    let authLogger: DebugLogger
+
     /// Initialize the Compiler Client
     /// - Parameters:
     ///   - appID: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - configuration: Client configuration including streaming chat settings and debug options
     public init(
-        appID: UUID, 
+        appID: UUID,
         configuration: Configuration = Configuration()
     ) {
         self.appID = appID
         self.configuration = configuration
-        self.functionLogger = DebugLogger(Logger.functionCalls, isEnabled: configuration.enableDebugLogging)
-        self.modelLogger = DebugLogger(Logger.modelCalls, isEnabled: configuration.enableDebugLogging)
-        self.authLogger = DebugLogger(Logger.auth, isEnabled: configuration.enableDebugLogging)
+        functionLogger = DebugLogger(Logger.functionCalls, isEnabled: configuration.enableDebugLogging)
+        modelLogger = DebugLogger(Logger.modelCalls, isEnabled: configuration.enableDebugLogging)
+        authLogger = DebugLogger(Logger.auth, isEnabled: configuration.enableDebugLogging)
     }
-    
+
     /// Update streaming chat configuration
     /// - Parameter update: Closure that takes an inout StreamConfiguration parameter
     public func updateStreamingChat(
@@ -56,7 +56,7 @@ public final actor CompilerClient {
     ) {
         update(&configuration.streamingChat)
     }
-    
+
     /// Creates an immutable streaming session configuration
     /// This captures the current streaming configuration at a point in time
     public func makeStreamingSession() -> StreamConfiguration {

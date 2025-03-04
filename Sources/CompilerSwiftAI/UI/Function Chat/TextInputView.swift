@@ -5,7 +5,7 @@ import SwiftUI
 struct TextInputView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
     var model: FunctionChatViewModel<AppState, Parameters>
     var process: (String) -> Void
-    
+
     var userInputBinding: Binding<String> {
         Binding(
             get: { model.inputText },
