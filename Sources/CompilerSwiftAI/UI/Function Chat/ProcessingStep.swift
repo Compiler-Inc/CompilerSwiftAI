@@ -7,7 +7,6 @@ struct ProcessingStep: Identifiable, Hashable {
     let text: String
     var isComplete: Bool
 
-
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

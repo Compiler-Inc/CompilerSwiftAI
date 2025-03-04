@@ -7,17 +7,17 @@ import Foundation
 actor ChatHistory {
     var _messages: [Message]
     var messageID: UUID?
-    
+
     /// We'll store the active continuation if someone requests `messagesStream`.
     var continuation: AsyncStream<[Message]>.Continuation?
-    
+
     var messages: [Message] {
         // Return all messages except those that are *still* streaming
         get async {
             _messages.filter { $0.state == .complete }
         }
     }
-    
+
     /// A continuous stream of *all* messages, including .streaming states
     var messagesStream: AsyncStream<[Message]> {
         AsyncStream { continuation in
@@ -26,25 +26,25 @@ actor ChatHistory {
             continuation.yield(_messages)
         }
     }
-    
+
     init(systemPrompt: String) {
-        self._messages = [Message(role: .system, content: systemPrompt)]
+        _messages = [Message(role: .system, content: systemPrompt)]
     }
-    
+
     func notifyMessageUpdate() {
         continuation?.yield(_messages)
     }
-    
+
     func addUserMessage(_ content: String) {
         _messages.append(Message(role: .user, content: content))
         notifyMessageUpdate()
     }
-    
+
     func addAssistantMessage(_ content: String) {
         _messages.append(Message(role: .assistant, content: content))
         notifyMessageUpdate()
     }
-    
+
     /// Start a new streaming response from the assistant
     @discardableResult
     func beginStreamingResponse() -> UUID {
@@ -55,11 +55,12 @@ actor ChatHistory {
         notifyMessageUpdate()
         return id
     }
-    
+
     /// Update the partial text of the *current* streaming assistant message
     func updateStreamingMessage(_ partial: String) {
         guard let id = messageID,
-              let idx = _messages.firstIndex(where: { $0.id == id }) else {
+              let idx = _messages.firstIndex(where: { $0.id == id })
+        else {
             return
         }
         let old = _messages[idx]
@@ -71,11 +72,12 @@ actor ChatHistory {
         )
         notifyMessageUpdate()
     }
-    
+
     /// Mark the streaming message complete with final text
     func completeStreamingMessage(_ finalContent: String) {
         guard let id = messageID,
-              let idx = _messages.firstIndex(where: { $0.id == id }) else {
+              let idx = _messages.firstIndex(where: { $0.id == id })
+        else {
             return
         }
         _messages[idx] = Message(
@@ -87,7 +89,7 @@ actor ChatHistory {
         messageID = nil
         notifyMessageUpdate()
     }
-    
+
     func clearHistory(keepingSystemPrompt: Bool = true) {
         messageID = nil
         if keepingSystemPrompt, let systemMessage = _messages.first, systemMessage.role == .system {
@@ -97,7 +99,7 @@ actor ChatHistory {
         }
         notifyMessageUpdate()
     }
-    
+
     deinit {
         continuation?.finish()
     }

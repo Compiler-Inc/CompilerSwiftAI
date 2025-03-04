@@ -5,7 +5,6 @@ import SwiftUI
 public struct FunctionChatView<AppState: Encodable & Sendable, Parameters: Decodable & Sendable>: View {
     @State var model: FunctionChatViewModel<AppState, Parameters>
 
-
     public init(state: AppState, client: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
         model = FunctionChatViewModel(state: state, client: client, describe: describe, execute: execute)
     }
