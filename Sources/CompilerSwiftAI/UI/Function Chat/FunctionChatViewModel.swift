@@ -40,10 +40,15 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
             recordingTask = Task {
                 do {
                     isRecording = true
-                    let stream = try await transcriber.startRecordingStream()
+                    let stream = try await transcriber.startStream()
 
-                    for try await transcription in stream {
-                        inputText = transcription
+                    for try await signal in stream {
+                        switch signal {
+                        case let .rms(float):
+                            print("float: \(float)")
+                        case let .transcription(string):
+                            inputText = string
+                        }
                     }
 
                     isRecording = false

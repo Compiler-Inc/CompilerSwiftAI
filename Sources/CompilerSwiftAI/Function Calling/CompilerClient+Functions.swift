@@ -22,7 +22,7 @@ extension CompilerClient {
         let endpoint = "\(baseURL)/v1/function-call/\(appID.uuidString)"
 
         guard let url = URL(string: endpoint) else {
-            functionLogger.error("Invalid URL: \(baseURL)")
+            functionLogger.error("Invalid URL: \(self.baseURL)")
             throw URLError(.badURL)
         }
 
