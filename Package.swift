@@ -8,7 +8,7 @@ let package = Package(
     products: [.library(name: "CompilerSwiftAI", targets: ["CompilerSwiftAI"])],
     dependencies: [
         .package(url: "https://github.com/gonzalezreal/swift-markdown-ui", from: "2.4.1"),
-        .package(url: "https://github.com/Compiler-Inc/Transcriber", branch: "main"),
+        .package(url: "https://github.com/Compiler-Inc/Transcriber", from: "0.1.6"),
     ],
     targets: [
         .target(name: "CompilerSwiftAI", dependencies: ["Transcriber", .product(name: "MarkdownUI", package: "swift-markdown-ui")]),

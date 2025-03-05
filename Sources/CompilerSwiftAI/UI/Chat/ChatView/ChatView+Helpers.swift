@@ -1,16 +1,18 @@
 import SwiftUI
+import Combine
 
 extension ChatView {
     @ViewBuilder
     func makeInputView() -> some View {
-        switch inputType {
-        case .text:
-            makeTextOnlyInput()
-        case .voice:
-            makeVoiceOnlyInput()
-        case .combined:
-            makeCombinedInput()
-        }
+        ChatInputView(onAttachPhotos: {}, onAttachFiles: {}, onSendTap: { _ in }, dismissKeyboard: Just(()).eraseToAnyPublisher(), isLoading: .constant(false))
+//        switch inputType {
+//        case .text:
+//            makeTextOnlyInput()
+//        case .voice:
+//            makeVoiceOnlyInput()
+//        case .combined:
+//            makeCombinedInput()
+//        }
     }
 
     func makeTextOnlyInput() -> some View {

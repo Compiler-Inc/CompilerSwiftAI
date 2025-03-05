@@ -21,17 +21,6 @@ class ChatViewModel: Transcribable {
     public let transcriber: Transcriber?
     private var recordingTask: Task<Void, Never>?
 
-    // Required protocol methods
-    public func requestAuthorization() async throws {
-        guard let transcriber else {
-            throw TranscriberError.noRecognizer
-        }
-        authStatus = await transcriber.requestAuthorization()
-        guard authStatus == .authorized else {
-            throw TranscriberError.notAuthorized
-        }
-    }
-
     // MARK: - Properties
 
     var errorMessage: String?
@@ -170,7 +159,7 @@ class ChatViewModel: Transcribable {
             var accumulated = ""
             do {
                 // Grab all messages so far (user + history)
-                let messagesSoFar = await self.chatHistory.messages
+                let messagesSoFar = await self.chatHistory.messages.filter({ !$0.content.isEmpty })
                 self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
 
                 // Get immutable streaming configuration
@@ -209,6 +198,17 @@ class ChatViewModel: Transcribable {
         logger.log("clearChat called. Clearing chat history.")
         Task.detached {
             await self.chatHistory.clearHistory()
+        }
+    }
+    
+    // Required protocol methods
+    public func requestAuthorization() async throws {
+        guard let transcriber else {
+            throw TranscriberError.noRecognizer
+        }
+        authStatus = await transcriber.requestAuthorization()
+        guard authStatus == .authorized else {
+            throw TranscriberError.notAuthorized
         }
     }
 }
