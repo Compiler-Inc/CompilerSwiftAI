@@ -24,7 +24,7 @@ public struct ChatView: View {
         }
     }
     
-    @ObservedObject private var new_viewModel: NEW_ChatViewModel = .init()
+    @ObservedObject private var new_viewModel = NEW_ChatViewModel()
     let viewModel: ChatViewModel
     var style: ChatViewStyle = .init()
     let inputType: ChatInputType
@@ -32,6 +32,7 @@ public struct ChatView: View {
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
     @State var isRecording = false
+    @State var loading = false
     @State private var items: [Item] = []
     
     private let dismissKeyboard = PassthroughSubject<Void, Never>()
@@ -111,7 +112,7 @@ public struct ChatView: View {
                     _ in
                 },
                 dismissKeyboard: dismissKeyboard.eraseToAnyPublisher(),
-                isLoading: $new_viewModel.isLoading
+                isLoading: $loading
             )
             .padding(.horizontal, 16)
             .safeAreaPadding(.bottom, 8)

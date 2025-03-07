@@ -69,13 +69,16 @@ class ChatViewModel: Transcribable {
         self.client = client
         self.systemPrompt = systemPrompt
         transcriber = Transcriber()
-
-        chatHistory = ChatHistory(systemPrompt: systemPrompt)
+        chatHistory = ChatHistory()
 
         // Start observing messages from chatHistory
         messageStreamTask = Task.detached { [weak self] in
             guard let self = self else { return }
             await self.observeMessageStream()
+        }
+        
+        Task {
+            await chatHistory.addSystemPrompt(systemPrompt)
         }
     }
 
@@ -126,19 +129,19 @@ class ChatViewModel: Transcribable {
         logger.log("observeMessageStream started. Now waiting for new messages...")
 
         // Continuously receive updates from chatHistory
-        for await newMessages in await chatHistory.messagesStream {
-            // Avoid processing if task is cancelled
-            guard !Task.isCancelled else { break }
-
-            // Log how many messages we got
-            logger.log("Received newMessages from actor, count = \(newMessages.count). Checking diff...")
-
-            // Now actually publish these messages to SwiftUI
-            logger.log("Publishing updated messages to SwiftUI. count=\(newMessages.count)")
-            await MainActor.run {
-                self.messages = newMessages
-            }
-        }
+//        for await newMessages in await chatHistory.messagesStream {
+//            // Avoid processing if task is cancelled
+//            guard !Task.isCancelled else { break }
+//
+//            // Log how many messages we got
+//            logger.log("Received newMessages from actor, count = \(newMessages.count). Checking diff...")
+//
+//            // Now actually publish these messages to SwiftUI
+//            logger.log("Publishing updated messages to SwiftUI. count=\(newMessages.count)")
+//            await MainActor.run {
+//                self.messages = newMessages
+//            }
+//        }
 
         logger.log("observeMessageStream completed or was cancelled.")
     }
@@ -146,60 +149,53 @@ class ChatViewModel: Transcribable {
     // MARK: - Send Message / Stream Handling
 
     func sendMessage(_ text: String) {
-        Task.detached {
-            self.logger.log("sendMessage initiated with text: \"\(text)\". Adding user message.")
-            await self.chatHistory.addUserMessage(text)
-
-            // Start streaming a new assistant response
-            await self.chatHistory.beginStreamingResponse()
-
-            // Mark UI as streaming
-            await MainActor.run { self.isStreaming = true }
-
-            var accumulated = ""
-            do {
-                // Grab all messages so far (user + history)
-                let messagesSoFar = await self.chatHistory.messages.filter({ !$0.content.isEmpty })
-                self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
-
-                // Get immutable streaming configuration
-                let config = await self.client.makeStreamingSession()
-                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
-
-                var chunkCount = 0
-                for try await partialMessage in stream {
-                    chunkCount += 1
-                    accumulated = partialMessage.content
-
-                    // Log each chunk size
-                    self.logger.log("Chunk #\(chunkCount): partial content size=\(accumulated.count). Updating streaming message.")
-
-                    // Update partial text in chatHistory
-                    await self.chatHistory.updateStreamingMessage(accumulated)
-                }
-
-                // SSE finished
-                self.logger.log("Streaming complete. Final content size=\(accumulated.count). Completing streaming message.")
-                await self.chatHistory.completeStreamingMessage(accumulated)
-            } catch {
-                self.logger.error("❌ SSE stream error: \(error). Completing with partial content.")
-                await self.chatHistory.completeStreamingMessage(accumulated)
-            }
-
-            // Done streaming
-            await MainActor.run { self.isStreaming = false }
-            self.logger.log("sendMessage completed. isStreaming set to false.")
-        }
+//        Task.detached {
+//            self.logger.log("sendMessage initiated with text: \"\(text)\". Adding user message.")
+//            await self.chatHistory.addUserMessage(text)
+//
+//            // Start streaming a new assistant response
+//            await self.chatHistory.beginStreamingResponse()
+//
+//            // Mark UI as streaming
+//            await MainActor.run { self.isStreaming = true }
+//
+//            var accumulated = ""
+//            do {
+//                // Grab all messages so far (user + history)
+//                let messagesSoFar = await self.chatHistory.messages.filter({ !$0.content.isEmpty })
+//                self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
+//
+//                // Get immutable streaming configuration
+//                let config = await self.client.makeStreamingSession()
+//                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
+//
+//                var chunkCount = 0
+//                for try await partialMessage in stream {
+//                    chunkCount += 1
+//                    accumulated = partialMessage.content
+//
+//                    // Log each chunk size
+//                    self.logger.log("Chunk #\(chunkCount): partial content size=\(accumulated.count). Updating streaming message.")
+//
+//                    // Update partial text in chatHistory
+//                    await self.chatHistory.updateStreamingMessage(accumulated)
+//                }
+//
+//                // SSE finished
+//                self.logger.log("Streaming complete. Final content size=\(accumulated.count). Completing streaming message.")
+//                await self.chatHistory.completeStreamingMessage(accumulated)
+//            } catch {
+//                self.logger.error("❌ SSE stream error: \(error). Completing with partial content.")
+//                await self.chatHistory.completeStreamingMessage(accumulated)
+//            }
+//
+//            // Done streaming
+//            await MainActor.run { self.isStreaming = false }
+//            self.logger.log("sendMessage completed. isStreaming set to false.")
+//        }
     }
 
     // MARK: - Clear Chat
-
-    func clearChat() {
-        logger.log("clearChat called. Clearing chat history.")
-        Task.detached {
-            await self.chatHistory.clearHistory()
-        }
-    }
     
     // Required protocol methods
     public func requestAuthorization() async throws {
