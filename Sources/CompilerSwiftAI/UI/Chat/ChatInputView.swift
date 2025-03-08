@@ -68,7 +68,7 @@ struct ChatInputView: View {
             .padding(.horizontal, 8)
         }
         .padding(.vertical, 8)
-        .background(Color(uiColor: .secondarySystemBackground))
+        .background(Color.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

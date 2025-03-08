@@ -43,12 +43,15 @@ actor NEW_ChatViewModel: ObservableObject {
 
             // Mark UI as streaming
             await self?.setStreaming(true)
-//
-//            var accumulated = ""
+
+//            
 //            do {
 //                // Grab all messages so far (user + history)
-//                let messagesSoFar = await self.chatHistory.messages.filter({ !$0.content.isEmpty })
-//                self.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
+//                guard let messagesSoFar = await self?.chatHistory.messages.filter({ !$0.content.isEmpty }) else {
+//                    return
+//                }
+//                
+//                self?.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
 //
 //                // Get immutable streaming configuration
 //                let config = await self.client.makeStreamingSession()
@@ -73,8 +76,8 @@ actor NEW_ChatViewModel: ObservableObject {
 //                self.logger.error("❌ SSE stream error: \(error). Completing with partial content.")
 //                await self.chatHistory.completeStreamingMessage(accumulated)
 //            }
-//
-//            // Done streaming
+
+//             Done streaming
 //            await MainActor.run { self.isStreaming = false }
 //            self.logger.log("sendMessage completed. isStreaming set to false.")
         }

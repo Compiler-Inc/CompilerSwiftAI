@@ -40,11 +40,6 @@ actor ChatHistory: ObservableObject {
 
     /// Mark the streaming message complete with final text
     func completeStreamingMessage() {
-        guard let id = messageId,
-              let idx = messages.firstIndex(where: { $0.id == id })
-        else {
-            return
-        }
         messageId = nil
     }
 }

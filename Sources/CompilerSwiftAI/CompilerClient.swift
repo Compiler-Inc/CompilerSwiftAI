@@ -24,7 +24,7 @@ public final actor CompilerClient {
     }
 
     /// Application ID (retrievable from the Comiler Developer Dashboard)
-    let appID: UUID
+    let appID: String
 
     private(set) var configuration: Configuration
 
@@ -39,7 +39,7 @@ public final actor CompilerClient {
     ///   - appID: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - configuration: Client configuration including streaming chat settings and debug options
     public init(
-        appID: UUID,
+        appID: String,
         configuration: Configuration = Configuration()
     ) {
         self.appID = appID

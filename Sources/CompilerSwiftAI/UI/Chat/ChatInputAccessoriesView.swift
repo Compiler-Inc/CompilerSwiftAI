@@ -40,11 +40,11 @@ struct ChatInputFieldAccessoriesView: View {
     
     var buttonBackground: Color {
         if isLoading {
-            return Color(uiColor: UIColor.systemFill)
+            return Color.gray
         }
         
         if textIsEmpty {
-            return Color(uiColor: UIColor.secondarySystemFill)
+            return Color.clear
         }
         
         return .accentColor
@@ -72,7 +72,7 @@ struct ChatInputFieldAccessoriesView: View {
                     .frame(width: 16, height: 16)
                     .padding(8)
                     .foregroundColor(.primary)
-                    .background(Color(uiColor: UIColor.systemBackground))
+                    .background(Color.primary)
                     .transition(.symbolEffect(.automatic))
             }
             .shadow(radius: 4)

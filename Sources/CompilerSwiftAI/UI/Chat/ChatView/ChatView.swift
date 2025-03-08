@@ -121,5 +121,5 @@ public struct ChatView: View {
 }
 
 #Preview {
-    ChatView(client: .init(appID: UUID(uuidString: "asdsad")!), inputType: .text)
+    ChatView(client: .init(appID: "asdsad"), inputType: .text)
 }
