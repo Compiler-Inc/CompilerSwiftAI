@@ -42,7 +42,7 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                 do {
                     isRecording = true
                     let stream = try await transcriber.startStream()
-
+                    
                     for try await signal in stream {
                         switch signal {
                         case let .rms(float):
