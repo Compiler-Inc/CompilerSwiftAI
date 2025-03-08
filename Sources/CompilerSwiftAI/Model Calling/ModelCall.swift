@@ -71,12 +71,37 @@ struct StreamRequest: ModelCallRequestBase {
     }
 }
 
-/// Response format for completion calls
-struct CompletionResponse: Codable, Sendable {
-    let content: String
+public struct CompletionResponse: Codable, Sendable {
+    private struct Choice: Codable {
+        struct Message: Codable {
+            let content: String
+        }
+
+        let message: Message
+    }
+
+    private let choices: [Choice]
+
+    /// The generated text content
+    public var content: String {
+        choices.first?.message.content ?? ""
+    }
 }
 
-/// Response format for streaming calls - each chunk
-struct StreamChunk: Codable, Sendable {
-    let content: String
+/// Response format for streaming chunks
+public struct StreamChunk: Codable, Sendable {
+    private struct Choice: Codable {
+        struct Message: Codable {
+            let content: String
+        }
+
+        let message: Message
+    }
+
+    private let choices: [Choice]
+
+    /// The generated text content
+    public var content: String {
+        choices.first?.message.content ?? ""
+    }
 }

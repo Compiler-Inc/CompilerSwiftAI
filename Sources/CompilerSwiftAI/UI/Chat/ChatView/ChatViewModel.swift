@@ -14,6 +14,7 @@ You are a helpful AI Assistant. Be direct, concise, and friendly. Always format 
 class ChatViewModel: Transcribable {
     public var isRecording = false
     public var transcribedText = ""
+    public var rmsLevel: Float = 0.0
     public var authStatus: SFSpeechRecognizerAuthorizationStatus = .notDetermined
     public var error: Error?
 
@@ -105,11 +106,11 @@ class ChatViewModel: Transcribable {
                     let stream = try await transcriber.startStream()
                     isRecording = true
 
-                    for try await partialResult in stream {
-                        switch partialResult {
-                        case let .rms(float):
-                            print("rms: \(float)")
-                        case let .transcription(string):
+                    for try await signal in stream {
+                        switch signal {
+                        case .rms(let float):
+                            self.rmsLevel = float
+                        case .transcription(let string):
                             self._userInput = string
                         }
                     }
