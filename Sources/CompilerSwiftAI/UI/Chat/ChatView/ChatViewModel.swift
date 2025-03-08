@@ -102,11 +102,16 @@ class ChatViewModel: Transcribable {
         } else {
             recordingTask = Task {
                 do {
-                    let stream = try await transcriber.startRecordingStream()
+                    let stream = try await transcriber.startStream()
                     isRecording = true
 
                     for try await partialResult in stream {
-                        self._userInput = partialResult
+                        switch partialResult {
+                        case let .rms(float):
+                            print("rms: \(float)")
+                        case let .transcription(string):
+                            self._userInput = string
+                        }
                     }
 
                     // Stream completed (silence detected), send the complete transcription
