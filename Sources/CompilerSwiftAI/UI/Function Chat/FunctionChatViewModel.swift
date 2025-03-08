@@ -45,9 +45,9 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                     
                     for try await signal in stream {
                         switch signal {
-                        case .rms(let float):
+                        case let .rms(float):
                             rmsLevel = float
-                        case .transcription(let string):
+                        case let .transcription(string):
                             inputText = string
                         }
                     }

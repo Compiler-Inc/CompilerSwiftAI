@@ -92,8 +92,8 @@ public final actor CompilerClient {
         using model: StreamConfiguration,
         systemPrompt: String? = nil
     ) async -> AsyncThrowingStream<String, Error> {
-        let message = Message(role: .user, content: prompt)
-        let messages = systemPrompt.map { [Message(role: .system, content: $0), message] } ?? [message]
+        let message = Message.userMessage(content: prompt)
+        let messages = systemPrompt.map { [Message.systemMessage(content: $0), message] } ?? [message]
         return makeStreamingModelCall(using: model.metadata, messages: messages)
     }
 
