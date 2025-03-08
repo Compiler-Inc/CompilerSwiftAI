@@ -1,5 +1,12 @@
-import MarkdownUI
+//
+//  File.swift
+//  CompilerSwiftAI
+//
+//  Created by Atharva Vaidya on 3/7/25.
+//
+
 import SwiftUI
+import MarkdownUI
 
 public extension ChatView {
     func userBubbleStyle(

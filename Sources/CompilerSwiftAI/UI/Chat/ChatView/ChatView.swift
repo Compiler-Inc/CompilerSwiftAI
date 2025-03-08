@@ -24,15 +24,15 @@ public struct ChatView: View {
         }
     }
     
-    @ObservedObject private var new_viewModel = NEW_ChatViewModel()
-    let viewModel: ChatViewModel
+    
     var style: ChatViewStyle = .init()
     let inputType: ChatInputType
     
+    @ObservedObject var viewModel: NEW_ChatViewModel
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
-    @State var isRecording = false
     @State var loading = false
+    @State var userInput: String = ""
     @State private var items: [Item] = []
     
     private let dismissKeyboard = PassthroughSubject<Void, Never>()
@@ -46,62 +46,49 @@ public struct ChatView: View {
     var assistantTypingColor: Color = .gray.opacity(0.7)
     var bubbleCornerRadius: CGFloat = 16
     var bubblePadding: EdgeInsets?
-    
-    // Markdown theme customization
     var markdownTheme: ((Theme) -> Theme)?
     
     public init(client: CompilerClient, inputType: ChatInputType = .combined) {
-        viewModel = ChatViewModel(client: client)
+        viewModel = NEW_ChatViewModel(client: client)
         self.inputType = inputType
     }
     
     // MARK: - Input Views
-    
-    func sendCurrentInput() {
-        print("sendingCurrentInput")
-        guard !viewModel.userInputBinding.wrappedValue.isEmpty else { return }
-        let input = viewModel.userInputBinding.wrappedValue
-        viewModel.userInputBinding.wrappedValue = ""
-        viewModel.sendMessage(input)
-    }
-    
     public var body: some View {
         VStack(spacing: 0) {
-            Spacer()
-            
-//            ZStack(alignment: .bottomTrailing) {
-//                ScrollViewReader { proxy in
-//                    ScrollView {
-//                        VStack(spacing: 12) {
-//                            ForEach(items) { item in
-//                                switch item {
-//                                case let .message(message):
-//                                    ChatBubble(message: message, style: .init())
-//                                case .loadingIndicator:
-//                                    TypingIndicator(style: .init())
-//                                }
-//                            }
-//                        }
-//                        .padding(.horizontal, style.horizontalPadding)
-//                    }
-//                    .scrollIndicators(.hidden)
-//                    .onAppear {
-//                        scrollViewProxy = proxy
-//                    }
-//                }
-//                
-//                if showScrollButton {
-//                    ScrollDownButton(
-//                        onTap: {
-//                            withAnimation(.spring(duration: 0.3)) {
-//                                scrollViewProxy?.scrollTo("bottom", anchor: .bottom)
-//                            }
-//                            showScrollButton = false
-//                        },
-//                        style: style
-//                    )
-//                }
-//            }
+            ZStack(alignment: .bottomTrailing) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            ForEach(items) { item in
+                                switch item {
+                                case let .message(message):
+                                    ChatBubble(message: message, style: .init())
+                                case .loadingIndicator:
+                                    TypingIndicator(style: .init())
+                                }
+                            }
+                        }
+                        .padding(.horizontal, style.horizontalPadding)
+                    }
+                    .scrollIndicators(.hidden)
+                    .onAppear {
+                        scrollViewProxy = proxy
+                    }
+                }
+                
+                if showScrollButton {
+                    ScrollDownButton(
+                        onTap: {
+                            withAnimation(.spring(duration: 0.3)) {
+                                scrollViewProxy?.scrollTo("bottom", anchor: .bottom)
+                            }
+                            showScrollButton = false
+                        },
+                        style: style
+                    )
+                }
+            }
             
             ChatInputView(
                 onAttachPhotos: {

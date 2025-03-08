@@ -5,9 +5,11 @@
 //  Created by Atharva Vaidya on 3/4/25.
 //
 
-import SwiftUI
 import Combine
 import OSLog
+import SwiftUI
+import Transcriber
+import Speech
 
 actor NEW_ChatViewModel: ObservableObject {
     /// `true` when a response is currently streaming
@@ -19,15 +21,22 @@ actor NEW_ChatViewModel: ObservableObject {
     /// Error message from the server, if any
     @Published var error: String?
     
+    /// Info about which model to use
+    @Published var modelMetadata: ModelMetadata?
+    
     /// Simple logger to show aggregator logs
     private let logger: Logger
     
     private let chatHistory: ChatHistory
+    private let client: CompilerClient
+    private let defaultModel = ModelMetadata.openAI(.gpt4o)
     
     init(
+        client: CompilerClient,
         chatHistory: ChatHistory = .init(),
         logger: Logger = Logger(subsystem: "NEW_ChatViewModel", category: "Aggregator")
     ) {
+        self.client = client
         self.logger = logger
         self.chatHistory = chatHistory
     }
@@ -36,50 +45,18 @@ actor NEW_ChatViewModel: ObservableObject {
         guard !loading && !streaming else { return }
         
         logger.log("sendMessage initiated with text: \"\(text)\". Adding user message.")
-        loading = true
         
         Task.detached(priority: .userInitiated) { [weak self] in
             await self?.chatHistory.addUserMessage(text)
+            
+            do {
+                try await self?.startStreamingResponse()
+            } catch {
+                print("error: \(error.localizedDescription)")
+                await self?.setError(error: error)
+            }
 
-            // Mark UI as streaming
-            await self?.setStreaming(true)
-
-//            
-//            do {
-//                // Grab all messages so far (user + history)
-//                guard let messagesSoFar = await self?.chatHistory.messages.filter({ !$0.content.isEmpty }) else {
-//                    return
-//                }
-//                
-//                self?.logger.log("Calling service.streamModelResponse with \(messagesSoFar.count) messages.")
-//
-//                // Get immutable streaming configuration
-//                let config = await self.client.makeStreamingSession()
-//                let stream = await self.client.streamModelResponse(using: config.metadata, messages: messagesSoFar)
-//
-//                var chunkCount = 0
-//                for try await partialMessage in stream {
-//                    chunkCount += 1
-//                    accumulated = partialMessage.content
-//
-//                    // Log each chunk size
-//                    self.logger.log("Chunk #\(chunkCount): partial content size=\(accumulated.count). Updating streaming message.")
-//
-//                    // Update partial text in chatHistory
-//                    await self.chatHistory.updateStreamingMessage(accumulated)
-//                }
-//
-//                // SSE finished
-//                self.logger.log("Streaming complete. Final content size=\(accumulated.count). Completing streaming message.")
-//                await self.chatHistory.completeStreamingMessage(accumulated)
-//            } catch {
-//                self.logger.error("❌ SSE stream error: \(error). Completing with partial content.")
-//                await self.chatHistory.completeStreamingMessage(accumulated)
-//            }
-
-//             Done streaming
-//            await MainActor.run { self.isStreaming = false }
-//            self.logger.log("sendMessage completed. isStreaming set to false.")
+            self?.logger.log("sendMessage completed. isStreaming set to false.")
         }
     }
     
@@ -93,5 +70,39 @@ actor NEW_ChatViewModel: ObservableObject {
                 await chatHistory.completeStreamingMessage()
             }
         }
+    }
+    
+    private func setLoading(_ value: Bool) {
+        guard value != loading else { return }
+        
+        loading = value
+    }
+    
+    private func setError(error: Error) {
+        self.error = error.localizedDescription
+    }
+    
+    private func startStreamingResponse() async throws {
+        let messagesSoFar = await chatHistory.messages.filter { !$0.content.isEmpty }
+        
+        guard !messagesSoFar.isEmpty else {
+            return setStreaming(false)
+        }
+        
+        setLoading(true)
+        setStreaming(true)
+        
+        let stream = await client.streamModelResponse(
+            using: modelMetadata ?? defaultModel,
+            messages: messagesSoFar
+        )
+        
+        for try await line in stream {
+            setLoading(false)
+            await chatHistory.updateStreamingMessage(line.content)
+        }
+        
+        setLoading(false)
+        setStreaming(false)
     }
 }
