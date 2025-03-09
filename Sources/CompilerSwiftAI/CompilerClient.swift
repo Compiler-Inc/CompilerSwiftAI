@@ -96,25 +96,6 @@ public final actor CompilerClient {
         let messages = systemPrompt.map { [Message.systemMessage(content: $0), message] } ?? [message]
         return makeStreamingModelCall(using: model.metadata, messages: messages)
     }
-
-    /// Process a natural language command into structured function calls
-    /// - Parameters:
-    ///   - command: The natural language command to process
-    /// - Returns: Array of functions with their parameters
-    /// - Note: You must specify the Parameters type when calling this function, either through type annotation or explicit generic parameter:
-    ///   ```swift
-    ///   // Option 1: Type annotation
-    ///   let functions: [Function<MyParameters>] = try await client.processFunctionCall("Add todo")
-    ///
-    ///   // Option 2: Explicit generic
-    ///   let functions = try await client.processFunctionCall<MyParameters>("Add todo")
-    ///   ```
-    public func processFunctionCall<Parameters: Decodable & Sendable>(
-        _ command: String
-    ) async throws -> [Function<Parameters>] {
-        // We use an empty state since this is the simplified version
-        try await processFunction(command, for: EmptyState(), using: "")
-    }
 }
 
 private struct EmptyState: Encodable, Sendable {

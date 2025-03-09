@@ -2,9 +2,9 @@
 
 import OSLog
 
-extension CompilerClient {
+public extension CompilerClient {
     // Request model
-    struct Request<State>: Encodable, Sendable where State: Encodable & Sendable {
+    internal struct Request<State>: Encodable, Sendable where State: Encodable & Sendable {
         let id: String
         let prompt: String
         let state: State
@@ -16,7 +16,10 @@ extension CompilerClient {
     ///   - state: Current state of your app (as defined by the developer, only needs to conform to Encodable and Sendable)
     ///   - token: Authorization token
     /// - Returns: An array of functions with Parameters that are both Decodable and Sendable
-    public func processFunction<State: Encodable & Sendable, Parameters: Decodable & Sendable>(_ prompt: String, for state: State, using _: String) async throws -> [Function<Parameters>] {
+    func processFunction<State: AppStateProtocol, FunctionType: FunctionCallProtocol>(
+        prompt: String,
+        for state: State
+    ) async throws -> [FunctionType] {
         functionLogger.debug("Starting processFunction with prompt: \(prompt)")
 
         let endpoint = "\(baseURL)/v1/function-call/\(appID)"
@@ -56,7 +59,7 @@ extension CompilerClient {
         functionLogger.debug("Response body: \(String(data: data, encoding: .utf8) ?? "nil")")
 
         do {
-            let functions = try JSONDecoder().decode([Function<Parameters>].self, from: data)
+            let functions = try JSONDecoder().decode([FunctionType].self, from: data)
             functionLogger.debug("Decoded response: \(functions)")
             return functions
         } catch {

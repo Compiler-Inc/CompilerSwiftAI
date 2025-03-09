@@ -28,7 +28,7 @@ public struct ChatView: View {
     var style: ChatViewStyle = .init()
     let inputType: ChatInputType
     
-    @ObservedObject var viewModel: NEW_ChatViewModel
+    @ObservedObject var viewModel: ChatViewModel
     @State var showScrollButton = false
     @State var scrollViewProxy: ScrollViewProxy?
     @State var loading = false
@@ -49,7 +49,7 @@ public struct ChatView: View {
     var markdownTheme: ((Theme) -> Theme)?
     
     public init(client: CompilerClient, inputType: ChatInputType = .combined) {
-        viewModel = NEW_ChatViewModel(client: client)
+        viewModel = ChatViewModel(client: client)
         self.inputType = inputType
     }
     
@@ -57,25 +57,7 @@ public struct ChatView: View {
     public var body: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottomTrailing) {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            ForEach(items) { item in
-                                switch item {
-                                case let .message(message):
-                                    ChatBubble(message: message, style: .init())
-                                case .loadingIndicator:
-                                    TypingIndicator(style: .init())
-                                }
-                            }
-                        }
-                        .padding(.horizontal, style.horizontalPadding)
-                    }
-                    .scrollIndicators(.hidden)
-                    .onAppear {
-                        scrollViewProxy = proxy
-                    }
-                }
+                
                 
                 if showScrollButton {
                     ScrollDownButton(
