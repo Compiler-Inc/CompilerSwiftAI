@@ -115,6 +115,13 @@ public final actor CompilerClient {
         // We use an empty state since this is the simplified version
         try await processFunction(command, for: EmptyState(), using: "")
     }
+    
+    public func processFunctionCallWithAPIKey<Parameters: Decodable & Sendable>(
+        _ command: String
+    ) async throws -> [Function<Parameters>] {
+        // We use an empty state since this is the simplified version
+        try await processFunction(command, for: EmptyState())
+    }
 }
 
 private struct EmptyState: Encodable, Sendable {

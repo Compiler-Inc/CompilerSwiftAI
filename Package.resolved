@@ -1,5 +1,5 @@
 {
-  "originHash" : "b9247bfd327c7e2daac159c92ba81772cf79220bc15e7fc0c3544804b72f4720",
+  "originHash" : "0c05489605cb9a4fdf4d998fe54579b2a697f0fcca75676760ffb148b10eb355",
   "pins" : [
     {
       "identity" : "networkimage",
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/Compiler-Inc/Transcriber",
       "state" : {
-        "branch" : "main",
-        "revision" : "61d081353d3feec2f338ad2e78930363e917a215"
+        "revision" : "f51a054ece97550d2819009ecc38ee19f43b43e2",
+        "version" : "0.1.6"
       }
     }
   ],
