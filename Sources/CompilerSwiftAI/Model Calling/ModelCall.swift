@@ -39,11 +39,11 @@ struct CompletionRequest: ModelCallRequestBase {
 struct StreamRequest: ModelCallRequestBase {
     let provider: ModelProvider
     let model: String
-    let messages: [Message]
+    let messages: [MessageDTO]
     let temperature: Float?
     let maxTokens: Int?
 
-    init(using metadata: ModelMetadata, messages: [Message]) {
+    init(using metadata: ModelMetadata, messages: [MessageDTO]) {
         provider = metadata.provider
         model = metadata.model
         self.messages = messages
@@ -71,6 +71,7 @@ struct StreamRequest: ModelCallRequestBase {
     }
 }
 
+/// Response format for completion calls
 public struct CompletionResponse: Codable, Sendable {
     private struct Choice: Codable {
         struct Message: Codable {

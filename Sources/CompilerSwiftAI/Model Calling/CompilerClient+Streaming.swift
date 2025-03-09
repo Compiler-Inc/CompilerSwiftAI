@@ -2,7 +2,7 @@
 
 import OSLog
 
-struct ChatResponseDataTransferObject: Decodable {
+struct ChatResponseDTO: Decodable {
     let content: String
 }
 
@@ -22,7 +22,7 @@ extension CompilerClient {
         modelLogger.debug("Starting streaming model call with \(messages.count) messages")
 
         // Prepare all the non-async parts of the request before the Task
-        let endpoint = "\(baseURL)/v1/apps/\(appID.uuidString)/end-users/model-call/stream"
+        let endpoint = "\(baseURL)/v1/apps/\(appID)/end-users/model-call/stream"
         guard let url = URL(string: endpoint) else {
             modelLogger.error("Invalid URL: \(self.baseURL)")
             return AsyncThrowingStream { $0.finish(throwing: URLError(.badURL)) }
@@ -53,7 +53,7 @@ extension CompilerClient {
 
         let body = StreamRequest(
             using: metadata,
-            messages: finalMessages
+            messages: finalMessages.map({ MessageDTO(message: $0) })
         )
 
         do {
@@ -144,7 +144,7 @@ extension CompilerClient {
                         state: state
                     )
 
-                    var streamingMessage = Message(role: .assistant, content: "")
+                    var streamingMessage = Message.assistantMessage(content: "")
                     continuation.yield(streamingMessage)
 
                     for try await chunk in stream {
@@ -186,14 +186,14 @@ extension CompilerClient {
         return parsedResponse.content
     }
 
-    private func parseEventMessage(from line: String) throws -> ChatResponseDataTransferObject? {
+    private func parseEventMessage(from line: String) throws -> ChatResponseDTO? {
         guard let data = line.data(using: .utf8) else {
             print("[ChatStreamer] ❌ Failed to convert string to data: \(line)")
             return nil
         }
 
         do {
-            let message = try JSONDecoder().decode(ChatResponseDataTransferObject.self, from: data)
+            let message = try JSONDecoder().decode(ChatResponseDTO.self, from: data)
             return message
         } catch {
             print("[ChatStreamer] ❌ JSON decode error: \(error)")

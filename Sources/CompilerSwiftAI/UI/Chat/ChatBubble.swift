@@ -1,55 +1,15 @@
 import MarkdownUI
 import SwiftUI
 
-// Default implementation
-struct ChatBubbleStyle {
-    var backgroundColor: Color
-    var foregroundColor: Color
-    var padding: EdgeInsets
-    var cornerRadius: CGFloat
-
-    // Typing indicator styling
-    var typingIndicatorColor: Color
-    var typingIndicatorSize: CGFloat
-    var typingIndicatorSpacing: CGFloat
-
-    init(
-        backgroundColor: Color = .blue,
-        foregroundColor: Color = .white,
-        padding: EdgeInsets = .init(top: 12, leading: 16, bottom: 12, trailing: 16),
-        cornerRadius: CGFloat = 16,
-        typingIndicatorColor: Color = .gray.opacity(0.5),
-        typingIndicatorSize: CGFloat = 6,
-        typingIndicatorSpacing: CGFloat = 4
-    ) {
-        self.backgroundColor = backgroundColor
-        self.foregroundColor = foregroundColor
-        self.padding = padding
-        self.cornerRadius = cornerRadius
-        self.typingIndicatorColor = typingIndicatorColor
-        self.typingIndicatorSize = typingIndicatorSize
-        self.typingIndicatorSpacing = typingIndicatorSpacing
-    }
-
-    func makeBubbleShape() -> RoundedRectangle {
-        RoundedRectangle(cornerRadius: cornerRadius)
-    }
-}
-
 // MARK: - Chat Bubble View
 
 struct ChatBubble: View {
     let message: Message
     var style: ChatBubbleStyle
-    @State private var isAnimating = false
-
-    var content: String {
-        switch message.state {
-        case let .streaming(partial):
-            return partial
-        case .complete:
-            return message.content
-        }
+    
+    init(message: Message, style: ChatBubbleStyle) {
+        self.message = message
+        self.style = style
     }
 
     var markdownTheme: Theme {
@@ -115,14 +75,9 @@ struct ChatBubble: View {
             }
     }
 
-    public init(message: Message, style: ChatBubbleStyle = ChatBubbleStyle()) {
-        self.message = message
-        self.style = style
-    }
-
-    public var body: some View {
+    var body: some View {
         VStack(alignment: message.role == .user ? .trailing : .leading) {
-            Markdown(content)
+            Markdown(message.content)
                 .textSelection(.enabled)
                 .markdownTheme(markdownTheme)
                 .padding(style.padding)
@@ -130,44 +85,8 @@ struct ChatBubble: View {
                     style.makeBubbleShape()
                         .fill(style.backgroundColor)
                 )
-                .onChange(of: message.state) { _, newState in
-                    isAnimating = newState.isStreaming
-                }
-                .onAppear {
-                    isAnimating = message.state.isStreaming
-                }
-
-            if message.state.isStreaming {
-                TypingIndicator(style: style)
-            }
         }
         .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
-    }
-}
-
-// MARK: - Typing Indicator
-
-struct TypingIndicator: View {
-    let style: ChatBubbleStyle
-    @State private var isAnimating = false
-
-    var body: some View {
-        HStack(spacing: style.typingIndicatorSpacing) {
-            ForEach(0 ..< 3) { index in
-                Circle()
-                    .fill(style.typingIndicatorColor)
-                    .frame(width: style.typingIndicatorSize, height: style.typingIndicatorSize)
-                    .opacity(isAnimating ? 1 : 0)
-                    .animation(
-                        .easeInOut(duration: 0.6)
-                            .repeatForever()
-                            .delay(Double(index) * 0.2),
-                        value: isAnimating
-                    )
-            }
-        }
-        .padding(.leading, 8)
-        .onAppear { isAnimating = true }
     }
 }
 

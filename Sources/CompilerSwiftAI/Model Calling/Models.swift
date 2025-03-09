@@ -27,7 +27,7 @@ public enum GeminiModel: String, Codable {
 }
 
 public enum AnthropicModel: String, Codable {
-    case claudeSonnet = "claude-3-5-sonnet-latest"
+    case claudeSonnet = "claude-3-7-sonnet-latest"
     case claudeHaiku = "claude-3-5-haiku-latest"
     case claudeOpus = "claude-3-5-opus-latest"
 }

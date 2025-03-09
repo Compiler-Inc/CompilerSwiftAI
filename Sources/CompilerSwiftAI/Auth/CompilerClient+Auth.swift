@@ -29,8 +29,9 @@ extension CompilerClient {
     }
 
     func authenticateWithServer(idToken: String, nonce: String? = nil) async throws -> String {
-        let lowercasedAppID = appID.uuidString.lowercased()
+        let lowercasedAppID = appID.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
+        
         guard let url = URL(string: endpoint) else {
             authLogger.error("Invalid URL: \(self.baseURL)")
             throw AuthError.invalidResponse

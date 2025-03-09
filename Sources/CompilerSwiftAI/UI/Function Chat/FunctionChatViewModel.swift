@@ -45,9 +45,9 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
                     
                     for try await signal in stream {
                         switch signal {
-                        case .rms(let float):
+                        case let .rms(float):
                             rmsLevel = float
-                        case .transcription(let string):
+                        case let .transcription(string):
                             inputText = string
                         }
                     }
@@ -66,14 +66,12 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
 
     var state: AppState
     var client: CompilerClient
-    var describe: (Function<Parameters>) -> String
     var execute: (Function<Parameters>) -> Void
 
-    init(state: AppState, client: CompilerClient, describe: @escaping (Function<Parameters>) -> String, execute: @escaping (Function<Parameters>) -> Void) {
+    init(state: AppState, client: CompilerClient, execute: @escaping (Function<Parameters>) -> Void) {
         transcriber = Transcriber()
         self.state = state
         self.client = client
-        self.describe = describe
         self.execute = execute
     }
 
@@ -90,14 +88,14 @@ class FunctionChatViewModel<AppState: Encodable & Sendable, Parameters: Decodabl
     func process(prompt: String) {
         Task {
             addStep("Sending request to Compiler")
-            guard let functions: [Function<Parameters>] = try? await client.processFunction(prompt, for: state, using: "") else { return }
-            completeLastStep()
-
-            for function in functions {
-                addStep(describe(function))
-                execute(function)
-                completeLastStep()
-            }
+//            guard let functions: [Function<Parameters>] = try? await client.processFunction(prompt, for: state, using: "") else { return }
+//            completeLastStep()
+//
+//            for function in functions {
+//                addStep(describe(function))
+//                execute(function)
+//                completeLastStep()
+//            }
         }
     }
 }

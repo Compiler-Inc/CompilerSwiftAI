@@ -24,7 +24,7 @@ public final actor CompilerClient {
     }
 
     /// Application ID (retrievable from the Comiler Developer Dashboard)
-    let appID: UUID
+    let appID: String
 
     private(set) var configuration: Configuration
 
@@ -39,7 +39,7 @@ public final actor CompilerClient {
     ///   - appID: Application ID (retrievable from the Comiler Developer Dashboard)
     ///   - configuration: Client configuration including streaming chat settings and debug options
     public init(
-        appID: UUID,
+        appID: String,
         configuration: Configuration = Configuration()
     ) {
         self.appID = appID
@@ -92,28 +92,9 @@ public final actor CompilerClient {
         using model: StreamConfiguration,
         systemPrompt: String? = nil
     ) async -> AsyncThrowingStream<String, Error> {
-        let message = Message(role: .user, content: prompt)
-        let messages = systemPrompt.map { [Message(role: .system, content: $0), message] } ?? [message]
+        let message = Message.userMessage(content: prompt)
+        let messages = systemPrompt.map { [Message.systemMessage(content: $0), message] } ?? [message]
         return makeStreamingModelCall(using: model.metadata, messages: messages)
-    }
-
-    /// Process a natural language command into structured function calls
-    /// - Parameters:
-    ///   - command: The natural language command to process
-    /// - Returns: Array of functions with their parameters
-    /// - Note: You must specify the Parameters type when calling this function, either through type annotation or explicit generic parameter:
-    ///   ```swift
-    ///   // Option 1: Type annotation
-    ///   let functions: [Function<MyParameters>] = try await client.processFunctionCall("Add todo")
-    ///
-    ///   // Option 2: Explicit generic
-    ///   let functions = try await client.processFunctionCall<MyParameters>("Add todo")
-    ///   ```
-    public func processFunctionCall<Parameters: Decodable & Sendable>(
-        _ command: String
-    ) async throws -> [Function<Parameters>] {
-        // We use an empty state since this is the simplified version
-        try await processFunction(command, for: EmptyState(), using: "")
     }
 }
 
