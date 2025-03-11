@@ -16,7 +16,7 @@ public extension CompilerClient {
     ///   - state: Current state of your app (as defined by the developer, only needs to conform to Encodable and Sendable)
     ///   - token: Authorization token
     /// - Returns: An array of functions with Parameters that are both Decodable and Sendable
-    func processFunction<State: AppStateProtocol, FunctionType: FunctionCallProtocol>(
+    func processFunction<State: AppStateProtocol, FunctionType: Decodable & Sendable>(
         prompt: String,
         for state: State
     ) async throws -> [FunctionType] {
