@@ -16,13 +16,13 @@ struct ModelMetadata: Codable, Sendable, Equatable {
     let model: Model
     let provider: ModelProvider
     let capabilities: [ModelCapability]
-    let temperature: Float?
+    let temperature: Double?
     let maxTokens: Int?
 
     init(provider: ModelProvider,
          capabilities: [ModelCapability] = [.chat],
          model: Model,
-         temperature: Float? = nil,
+         temperature: Double? = nil,
          maxTokens: Int? = nil)
     {
         self.provider = provider
@@ -33,23 +33,23 @@ struct ModelMetadata: Codable, Sendable, Equatable {
     }
 
     // Convenience initializers for each provider's Models
-    static func openAI(_ model: OpenAIModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+    static func openAI(_ model: OpenAIModel, temperature: Double? = nil, maxTokens: Int? = nil) -> ModelMetadata {
         ModelMetadata(provider: .openai, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
 
-    static func anthropic(_ model: AnthropicModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+    static func anthropic(_ model: AnthropicModel, temperature: Double? = nil, maxTokens: Int? = nil) -> ModelMetadata {
         ModelMetadata(provider: .anthropic, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
 
-    static func perplexity(_ model: PerplexityModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+    static func perplexity(_ model: PerplexityModel, temperature: Double? = nil, maxTokens: Int? = nil) -> ModelMetadata {
         ModelMetadata(provider: .perplexity, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
 
-    static func deepseek(_ model: DeepSeekModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+    static func deepseek(_ model: DeepSeekModel, temperature: Double? = nil, maxTokens: Int? = nil) -> ModelMetadata {
         ModelMetadata(provider: .deepseek, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
 
-    static func google(_ model: GeminiModel, temperature: Float? = nil, maxTokens: Int? = nil) -> ModelMetadata {
+    static func google(_ model: GeminiModel, temperature: Double? = nil, maxTokens: Int? = nil) -> ModelMetadata {
         ModelMetadata(provider: .google, model: model.rawValue, temperature: temperature, maxTokens: maxTokens)
     }
 
