@@ -7,18 +7,18 @@
 
 import Foundation
 
-struct MessageDTO: Codable, Sendable {
-    let id: String
-    let role: String
-    let content: String
+public struct MessageDTO: Codable, Sendable {
+    public let id: String
+    public let role: String
+    public let content: String
     
-    init(message: Message) {
+    public init(message: Message) {
         self.id = message.id
         self.role = message.role.rawValue
         self.content = message.content
     }
     
-    func toMessage() -> Message {
+    public func toMessage() -> Message {
         Message(
             id: id,
             role: Message.Role(rawValue: role) ?? .user,

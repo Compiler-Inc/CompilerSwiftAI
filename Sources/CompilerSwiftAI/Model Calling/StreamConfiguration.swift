@@ -16,7 +16,7 @@ public struct StreamConfiguration: Sendable {
     public init(
         provider: ModelProvider,
         model: Model,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) {
         metadata = ModelMetadata(
@@ -39,7 +39,7 @@ public extension StreamConfiguration {
     ///   - maxTokens: Optional maximum tokens to generate
     static func openAI(
         _ model: OpenAIModel,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(
@@ -57,7 +57,7 @@ public extension StreamConfiguration {
     ///   - maxTokens: Optional maximum tokens to generate
     static func anthropic(
         _ model: AnthropicModel,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(
@@ -75,7 +75,7 @@ public extension StreamConfiguration {
     ///   - maxTokens: Optional maximum tokens to generate
     static func perplexity(
         _ model: PerplexityModel,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(
@@ -93,7 +93,7 @@ public extension StreamConfiguration {
     ///   - maxTokens: Optional maximum tokens to generate
     static func deepseek(
         _ model: DeepSeekModel,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(
@@ -111,7 +111,7 @@ public extension StreamConfiguration {
     ///   - maxTokens: Optional maximum tokens to generate
     static func google(
         _ model: GeminiModel,
-        temperature: Float? = nil,
+        temperature: Double? = nil,
         maxTokens: Int? = nil
     ) -> StreamConfiguration {
         .init(metadata: ModelMetadata(

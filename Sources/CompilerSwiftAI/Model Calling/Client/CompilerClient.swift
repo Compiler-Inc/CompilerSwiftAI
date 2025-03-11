@@ -1,4 +1,4 @@
-//  Copyright © 2025 Compiler, Inc. All rights reserved.
+//  Copyright 2025 Compiler, Inc. All rights reserved.
 
 import OSLog
 
@@ -63,38 +63,31 @@ public final actor CompilerClient {
         configuration.streamingChat
     }
 
-    /// Generate text from a prompt using the specified model
+    /// Generate text using a completion request
     /// - Parameters:
-    ///   - prompt: The input prompt
+    ///   - request: The completion request configuration
     ///   - model: The model configuration to use
-    ///   - systemPrompt: Optional system prompt to set context
     /// - Returns: The complete model response including tokens used, finish reason, etc.
     public func generateText(
-        prompt: String,
-        using model: StreamConfiguration,
-        systemPrompt: String? = nil
-    ) async throws -> CompletionResponse {
+        request: CompletionRequest,
+        using model: StreamConfiguration
+    ) async throws -> ChatCompletionResponse {
         try await makeModelCallWithResponse(
             using: model.metadata,
-            systemPrompt: systemPrompt,
-            userPrompt: prompt
+            request: request.toDTO(stream: false)
         )
     }
 
-    /// Stream text generation from a prompt
+    /// Stream text generation using a completion request
     /// - Parameters:
-    ///   - prompt: The input prompt
+    ///   - request: The completion request configuration
     ///   - model: The model configuration to use
-    ///   - systemPrompt: Optional system prompt to set context
     /// - Returns: An async stream of response chunks with metadata
     public func streamText(
-        prompt: String,
-        using model: StreamConfiguration,
-        systemPrompt: String? = nil
-    ) async -> AsyncThrowingStream<String, Error> {
-        let message = Message.userMessage(content: prompt)
-        let messages = systemPrompt.map { [Message.systemMessage(content: $0), message] } ?? [message]
-        return makeStreamingModelCall(using: model.metadata, messages: messages)
+        request: CompletionRequest,
+        using model: StreamConfiguration
+    ) async -> AsyncThrowingStream<ChatCompletionChunk, Error> {
+        makeStreamingModelCall(using: model.metadata, request: request.toDTO(stream: true))
     }
 }
 
