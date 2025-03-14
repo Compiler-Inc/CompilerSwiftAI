@@ -68,12 +68,8 @@ public final actor CompilerClient {
     ///   - request: The completion request configuration
     ///   - model: The model configuration to use
     /// - Returns: The complete model response including tokens used, finish reason, etc.
-    public func generateText(
-        request: CompletionRequest,
-        using model: StreamConfiguration
-    ) async throws -> ChatCompletionResponse {
+    public func generateText(request: CompletionRequest) async throws -> ChatCompletionResponse {
         try await makeModelCallWithResponse(
-            using: model.metadata,
             request: request.toDTO(stream: false)
         )
     }
@@ -83,11 +79,8 @@ public final actor CompilerClient {
     ///   - request: The completion request configuration
     ///   - model: The model configuration to use
     /// - Returns: An async stream of response chunks with metadata
-    public func streamText(
-        request: CompletionRequest,
-        using model: StreamConfiguration
-    ) async -> AsyncThrowingStream<ChatCompletionChunk, Error> {
-        makeStreamingModelCall(using: model.metadata, request: request.toDTO(stream: true))
+    public func streamText(request: CompletionRequest) async -> AsyncThrowingStream<ChatCompletionChunk, Error> {
+        makeStreamingModelCall( request: request.toDTO(stream: true))
     }
 }
 

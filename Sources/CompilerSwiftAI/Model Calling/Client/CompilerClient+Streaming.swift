@@ -11,19 +11,8 @@ extension CompilerClient {
 
     // Specialized String streaming version
     func makeStreamingModelCall(
-        using metadata: ModelMetadata,
         request: CompletionRequestDTO
     ) -> AsyncThrowingStream<ChatCompletionChunk, Error> {
-        guard streamingProviders.contains(metadata.provider) else {
-            return AsyncThrowingStream {
-                $0.finish(
-                    throwing: AuthError.serverError(
-                        "Only \(streamingProviders.map { $0.rawValue }.joined(separator: ", ")) support streaming"
-                    )
-                )
-            }
-        }
-
         modelLogger.debug("Starting streaming model call")
 
         // Prepare request URL and headers
