@@ -4,7 +4,6 @@ import OSLog
 
 extension CompilerClient {
     func makeModelCallWithResponse(
-        using metadata: ModelMetadata,
         request: CompletionRequestDTO
     ) async throws -> ChatCompletionResponse {
         let endpoint = "\(baseURL)/v1/apps/\(appID)/end-users/model-call"

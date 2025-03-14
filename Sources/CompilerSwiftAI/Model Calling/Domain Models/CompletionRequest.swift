@@ -13,6 +13,9 @@ public struct CompletionRequest {
     /// ID of the model to use
     public let model: String
     
+    /// The provider of the model
+    public let provider: ModelProvider
+    
     // MARK: - Optional Parameters
     
     /// Whether to store the output for model distillation or evals.
@@ -56,6 +59,7 @@ public struct CompletionRequest {
     public init(
         messages: [Message],
         model: String,
+        provider: ModelProvider,
         store: Bool? = nil,
         frequencyPenalty: Double? = nil,
         logitBias: [String: Int]? = nil,
@@ -71,6 +75,7 @@ public struct CompletionRequest {
     ) {
         self.messages = messages
         self.model = model
+        self.provider = provider
         self.store = store
         self.frequencyPenalty = frequencyPenalty
         self.logitBias = logitBias
@@ -91,6 +96,7 @@ public struct CompletionRequest {
         CompletionRequestDTO(
             messages: messages.map { $0.toDTO() },
             model: model,
+            provider: provider.rawValue,
             store: store,
             frequencyPenalty: frequencyPenalty,
             logitBias: logitBias,

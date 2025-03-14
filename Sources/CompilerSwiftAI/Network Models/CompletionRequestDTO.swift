@@ -19,6 +19,9 @@ struct CompletionRequestDTO: Encodable {
     /// ID of the model to use
     let model: String
     
+    /// The provider of the model
+    let provider: String
+    
     // MARK: - Optional Parameters with Defaults
     
     /// Whether to store the output for model distillation or evals.
@@ -71,7 +74,7 @@ struct CompletionRequestDTO: Encodable {
     // MARK: - Coding Keys
     
     enum CodingKeys: String, CodingKey {
-        case messages, model, store
+        case messages, model, provider, store
         case frequencyPenalty = "frequency_penalty"
         case logitBias = "logit_bias"
         case logprobs
@@ -88,6 +91,7 @@ struct CompletionRequestDTO: Encodable {
     init(
         messages: [MessageDTO],
         model: String,
+        provider: String,
         store: Bool? = false,
         frequencyPenalty: Double? = 0,
         logitBias: [String: Int]? = nil,
@@ -104,6 +108,7 @@ struct CompletionRequestDTO: Encodable {
     ) {
         self.messages = messages
         self.model = model
+        self.provider = provider
         self.store = store
         self.frequencyPenalty = frequencyPenalty
         self.logitBias = logitBias
@@ -122,6 +127,7 @@ struct CompletionRequestDTO: Encodable {
     func copy(
         messages: [MessageDTO]? = nil,
         model: String? = nil,
+        provider: String? = nil,
         store: Bool? = nil,
         frequencyPenalty: Double? = nil,
         logitBias: [String: Int]? = nil,
@@ -139,6 +145,7 @@ struct CompletionRequestDTO: Encodable {
         CompletionRequestDTO(
             messages: messages ?? self.messages,
             model: model ?? self.model,
+            provider: provider ?? self.provider,
             store: store ?? self.store,
             frequencyPenalty: frequencyPenalty ?? self.frequencyPenalty,
             logitBias: logitBias ?? self.logitBias,
