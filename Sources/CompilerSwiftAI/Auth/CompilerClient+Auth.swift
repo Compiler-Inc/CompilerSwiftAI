@@ -11,6 +11,13 @@ public enum AuthError: Error {
 }
 
 extension CompilerClient {
+    struct AppleSignInRequest: Encodable {
+        let id_token: String
+        let nonce: String?
+        let email: String?
+        let name: String?
+    }
+    
     /// Gets either the stored Apple ID Token or a refreshed one
     /// - Returns: Token string
     func getValidToken() async throws -> String {
@@ -28,7 +35,7 @@ extension CompilerClient {
         throw AuthError.invalidToken
     }
 
-    func authenticateWithServer(idToken: String, nonce: String? = nil) async throws -> String {
+    func authenticateWithServer(idToken: String, nonce: String? = nil, email: String? = nil, name: String? = nil) async throws -> String {
         let lowercasedAppID = appID.lowercased()
         let endpoint = "\(baseURL)/v1/apps/\(lowercasedAppID)/end-users/apple"
         
@@ -37,10 +44,7 @@ extension CompilerClient {
             throw AuthError.invalidResponse
         }
 
-        var body: [String: String] = ["id_token": idToken]
-        if let nonce {
-            body["nonce"] = nonce
-        }
+        let body = AppleSignInRequest(id_token: idToken, nonce: nonce, email: email, name: name)
         authLogger.debug("Making auth request to: \(endpoint)")
 
         var request = URLRequest(url: url)

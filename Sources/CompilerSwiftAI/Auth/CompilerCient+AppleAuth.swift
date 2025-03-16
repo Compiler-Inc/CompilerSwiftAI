@@ -3,7 +3,7 @@
 import AuthenticationServices
 
 public extension CompilerClient {
-    func handleSignInWithApple(_ result: Result<ASAuthorization, Error>, nonce: String?) async throws -> Bool {
+    func handleSignInWithApple(_ result: Result<ASAuthorization, Error>, nonce: String?) async throws {
         switch result {
         case let .success(auth):
             guard let appleIDCredential = auth.credential as? ASAuthorizationAppleIDCredential,
@@ -20,12 +20,21 @@ public extension CompilerClient {
             if let nonce = nonce {
                 await keychain.save(nonce, service: "apple-nonce", account: "user")
             }
+            
+            let userIdentifier = appleIDCredential.user
+            let fullName = appleIDCredential.fullName
+            let email = appleIDCredential.email
+            
+            let formatter = PersonNameComponentsFormatter()
 
-            let accessToken = try await authenticateWithServer(idToken: idToken, nonce: nonce)
+            let accessToken = try await authenticateWithServer(
+                idToken: idToken,
+                nonce: nonce,
+                email: email,
+                name: fullName.map { formatter.string(from: $0) }
+            )
+            
             await keychain.save(accessToken, service: "access-token", account: "user")
-
-            return true
-
         case let .failure(error):
             throw AuthError.networkError(error)
         }
