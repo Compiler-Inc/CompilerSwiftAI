@@ -23,7 +23,7 @@ public struct ChatCompletionChunk: Decodable, Sendable {
     /// The service tier used for processing the request (if applicable).
     public let serviceTier: String?
     /// A fingerprint representing the backend configuration the model runs with.
-    public let systemFingerprint: String
+    public let systemFingerprint: String?
     /// The list of chat completion choice chunks.
     public let choices: [ChatChunkChoice]
     /// Usage statistics for the completion request.
