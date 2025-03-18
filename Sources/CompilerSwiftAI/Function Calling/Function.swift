@@ -5,7 +5,7 @@ public struct Function<Parameters: Decodable & Sendable>: FunctionCallProtocol {
     private enum CodingKeys: String, CodingKey {
         case id = "function"
         case parameters
-        case colloquialDescription = "colloquial_response"
+        case colloquialResponse = "colloquial_response"
     }
     
     /// Function name
@@ -15,11 +15,11 @@ public struct Function<Parameters: Decodable & Sendable>: FunctionCallProtocol {
     public let parameters: Parameters?
     
     /// The description to show the user while this function is being executed.
-    public let colloquialDescription: String
+    public let colloquialResponse: String
     
-    public init(id: String, parameters: Parameters?, colloquialDescription: String) {
+    public init(id: String, parameters: Parameters?, colloquialResponse: String) {
         self.id = id
         self.parameters = parameters
-        self.colloquialDescription = colloquialDescription
+        self.colloquialResponse = colloquialResponse
     }
 }

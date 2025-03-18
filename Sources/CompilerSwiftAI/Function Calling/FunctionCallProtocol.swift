@@ -12,5 +12,5 @@ public protocol FunctionCallProtocol: Decodable & Sendable {
     var parameters: Parameters { get }
     
     /// The description to show the user while this function is being executed.
-    var colloquialDescription: String { get }
+    var colloquialResponse: String { get }
 }
