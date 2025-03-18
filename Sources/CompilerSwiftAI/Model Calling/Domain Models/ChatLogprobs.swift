@@ -1,9 +1,4 @@
-//
-//  ChatLogprobs.swift
-//  CompilerSwiftAI
-//
-//  Created by Atharva Vaidya on 3/9/25.
-//
+//  Copyright © 2025 Compiler, Inc. All rights reserved.
 
 import Foundation
 
