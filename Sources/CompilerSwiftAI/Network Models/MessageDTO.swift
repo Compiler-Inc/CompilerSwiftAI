@@ -1,4 +1,4 @@
-//  Copyright © 2025 Compiler, Inc. All rights reserved.
+//  Copyright 2025 Compiler, Inc. All rights reserved.
 
 import Foundation
 
@@ -6,17 +6,21 @@ public struct MessageDTO: Codable, Sendable {
     public enum ContentType: String, Codable, Sendable {
         case text = "text"
         case imageUrl = "image_url"
+        case toolCall = "tool_call"
+        case toolCallResult = "tool_call_result"
     }
     
     public struct Content: Codable, Sendable {
         let type: ContentType
         let text: String?
         let imageUrl: ImageUrl?
+        let toolCall: ToolCallDelta?
         
         private enum CodingKeys: String, CodingKey {
             case type
             case text
             case imageUrl = "image_url"
+            case toolCall = "tool_call"
         }
     }
     
@@ -34,9 +38,13 @@ public struct MessageDTO: Codable, Sendable {
         self.content = message.content.map { content in
             switch content {
             case .text(let text):
-                return Content(type: .text, text: text, imageUrl: nil)
+                return Content(type: .text, text: text, imageUrl: nil, toolCall: nil)
             case .image(let url):
-                return Content(type: .imageUrl, text: nil, imageUrl: ImageUrl(url: url))
+                return Content(type: .imageUrl, text: nil, imageUrl: ImageUrl(url: url), toolCall: nil)
+            case .toolCall(let delta):
+                return Content(type: .toolCall, text: nil, imageUrl: nil, toolCall: delta)
+            case .toolCallResult(let result):
+                return Content(type: .toolCallResult, text: result, imageUrl: nil, toolCall: nil)
             }
         }
     }
@@ -46,12 +54,16 @@ public struct MessageDTO: Codable, Sendable {
             id: id,
             role: .init(rawValue: role) ?? .user,
             content: content.compactMap { content in
-                if let text = content.text {
-                    return .text(text)
-                } else if let imageUrl = content.imageUrl {
-                    return .image(imageUrl.url)
+                switch content.type {
+                case .text:
+                    return content.text.map { .text($0) }
+                case .imageUrl:
+                    return content.imageUrl.map { .image($0.url) }
+                case .toolCall:
+                    return content.toolCall.map { .toolCall($0) }
+                case .toolCallResult:
+                    return content.text.map { .toolCallResult($0) }
                 }
-                return nil
             }
         )
     }

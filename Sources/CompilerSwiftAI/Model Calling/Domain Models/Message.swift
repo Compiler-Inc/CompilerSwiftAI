@@ -18,11 +18,15 @@ public struct Message: Sendable, Equatable {
     public enum Content: Sendable, Equatable {
         case text(String)
         case image(String)
+        case toolCall(ToolCallDelta)
+        case toolCallResult(String)
         
         var type: ContentType {
             switch self {
             case .text: return .text
             case .image: return .imageUrl
+            case .toolCall: return .text
+            case .toolCallResult: return .text
             }
         }
         
@@ -30,6 +34,8 @@ public struct Message: Sendable, Equatable {
             switch self {
             case .text(let text): return text
             case .image(let url): return url
+            case .toolCall(let toolCall): return "Function call: \(toolCall.function?.name ?? "")"
+            case .toolCallResult(let result): return result
             }
         }
     }
