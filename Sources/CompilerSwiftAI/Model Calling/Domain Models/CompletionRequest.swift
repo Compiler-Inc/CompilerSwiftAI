@@ -152,7 +152,7 @@ public extension CompletionRequest {
         let type: String
         let function: Function
         
-        init(function: Function) {
+        public init(function: Function) {
             self.type = "function"
             self.function = function
         }
@@ -172,6 +172,13 @@ public extension CompletionRequest {
         let parameters: [String: Any]?
         /// Whether to enable strict schema adherence when generating the function call.
         let strict: Bool?
+        
+        public init(name: String, description: String?, parameters: [String : Any]?, strict: Bool?) {
+            self.name = name
+            self.description = description
+            self.parameters = parameters
+            self.strict = strict
+        }
         
         func toDTO() -> CompletionRequestDTO.Function {
             CompletionRequestDTO.Function(
