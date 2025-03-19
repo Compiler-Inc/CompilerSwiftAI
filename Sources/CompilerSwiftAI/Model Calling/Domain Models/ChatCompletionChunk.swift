@@ -66,7 +66,7 @@ public struct ChatDelta: Decodable, Sendable {
 }
 
 /// Represents a delta for a tool call in a streamed response
-public struct ToolCallDelta: Decodable, Sendable {
+public struct ToolCallDelta: Codable, Sendable, Equatable {
     /// The index of this tool call in the array
     public let index: Int
     /// The ID of the tool call (only present in first delta)
@@ -78,7 +78,7 @@ public struct ToolCallDelta: Decodable, Sendable {
 }
 
 /// Represents a delta for a function call in a streamed response
-public struct FunctionCallDelta: Decodable, Sendable {
+public struct FunctionCallDelta: Codable, Sendable, Equatable {
     /// The name of the function (only present in first delta)
     public let name: String?
     /// The arguments being built up
