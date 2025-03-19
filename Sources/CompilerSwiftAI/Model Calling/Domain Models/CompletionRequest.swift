@@ -53,7 +53,13 @@ public struct CompletionRequest {
     
     /// A unique identifier representing your end user.
     public let user: String?
-
+    
+    /// Tools (including functions) that the model may call.
+    public let tools: [Tool]?
+    
+    /// Controls which (if any) function is called by the model.
+    public let toolChoice: ToolChoice?
+    
     // MARK: - Initialization
 
     public init(
@@ -71,7 +77,9 @@ public struct CompletionRequest {
         stop: StopSequence? = nil,
         temperature: Double? = nil,
         topP: Double? = nil,
-        user: String? = nil
+        user: String? = nil,
+        tools: [Tool]? = nil,
+        toolChoice: ToolChoice? = nil
     ) {
         self.messages = messages
         self.model = model
@@ -88,6 +96,8 @@ public struct CompletionRequest {
         self.temperature = temperature
         self.topP = topP
         self.user = user
+        self.tools = tools
+        self.toolChoice = toolChoice
     }
 
     // MARK: - DTO Conversion
@@ -109,7 +119,9 @@ public struct CompletionRequest {
             stream: stream,
             temperature: temperature,
             topP: topP,
-            user: user
+            user: user,
+            tools: tools?.map { $0.toDTO() },
+            toolChoice: toolChoice?.toDTO()
         )
     }
 }
@@ -130,6 +142,61 @@ public extension CompletionRequest {
                 return .string(value)
             case .strings(let values):
                 return .strings(values)
+            }
+        }
+    }
+    
+    /// A tool that can be used by the model
+    struct Tool {
+        /// The type of the tool. Currently, only function is supported.
+        let type: String
+        let function: Function
+        
+        init(function: Function) {
+            self.type = "function"
+            self.function = function
+        }
+        
+        func toDTO() -> CompletionRequestDTO.Tool {
+            CompletionRequestDTO.Tool(function: function.toDTO())
+        }
+    }
+
+    /// A function that can be called by the model
+    struct Function {
+        /// The name of the function to be called. Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        let name: String
+        /// A description of what the function does, used by the model to choose when and how to call the function.
+        let description: String?
+        /// The parameters the functions accepts, described as a JSON Schema object.
+        let parameters: [String: Any]?
+        /// Whether to enable strict schema adherence when generating the function call.
+        let strict: Bool?
+        
+        func toDTO() -> CompletionRequestDTO.Function {
+            CompletionRequestDTO.Function(
+                name: name,
+                description: description,
+                parameters: parameters,
+                strict: strict
+            )
+        }
+    }
+
+    /// Controls which (if any) function is called by the model.
+    enum ToolChoice {
+        case none
+        case auto
+        case function(name: String)
+        
+        func toDTO() -> CompletionRequestDTO.ToolChoice {
+            switch self {
+            case .none:
+                return .none
+            case .auto:
+                return .auto
+            case .function(let name):
+                return .function(name: name)
             }
         }
     }

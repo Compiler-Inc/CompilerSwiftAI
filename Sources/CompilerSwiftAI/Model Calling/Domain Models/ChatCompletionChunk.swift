@@ -56,4 +56,31 @@ public struct ChatDelta: Decodable, Sendable {
     public let role: ChatRole?
     /// The content added in this chunk (if any).
     public let content: String?
+    /// The tool calls delta in this chunk (if any).
+    public let toolCalls: [ToolCallDelta]?
+    
+    enum CodingKeys: String, CodingKey {
+        case role, content
+        case toolCalls = "tool_calls"
+    }
+}
+
+/// Represents a delta for a tool call in a streamed response
+public struct ToolCallDelta: Decodable, Sendable {
+    /// The index of this tool call in the array
+    public let index: Int
+    /// The ID of the tool call (only present in first delta)
+    public let id: String?
+    /// The type of the tool call (only present in first delta)
+    public let type: String?
+    /// The function call delta
+    public let function: FunctionCallDelta?
+}
+
+/// Represents a delta for a function call in a streamed response
+public struct FunctionCallDelta: Decodable, Sendable {
+    /// The name of the function (only present in first delta)
+    public let name: String?
+    /// The arguments being built up
+    public let arguments: String?
 }

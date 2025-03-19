@@ -53,9 +53,16 @@ public struct ChatMessage: Decodable, Sendable {
     /// The role of the message sender (for example, "assistant", "user", or "system").
     public let role: ChatRole
     /// The content of the message.
-    public let content: String
+    public let content: String?
     /// An optional refusal message (if applicable).
     public let refusal: String?
+    /// The tool calls made by the model in this message.
+    public let toolCalls: [ToolCall]?
+    
+    enum CodingKeys: String, CodingKey {
+        case role, content, refusal
+        case toolCalls = "tool_calls"
+    }
 }
 
 /// The role of a chat message.
@@ -63,6 +70,25 @@ public enum ChatRole: String, Decodable, Sendable {
     case system
     case user
     case assistant
+    case tool
+}
+
+/// Represents a tool call made by the model
+public struct ToolCall: Decodable, Sendable {
+    /// A unique identifier for the tool call
+    public let id: String
+    /// The type of tool call (currently only "function" is supported)
+    public let type: String
+    /// The function that was called
+    public let function: FunctionCall
+}
+
+/// Represents a function call made by the model
+public struct FunctionCall: Decodable, Sendable {
+    /// The name of the function to call
+    public let name: String
+    /// The arguments to pass to the function, encoded as a JSON string
+    public let arguments: String
 }
 
 // MARK: - Usage and Token Details
