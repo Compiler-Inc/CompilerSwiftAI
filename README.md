@@ -76,7 +76,7 @@ Somewhere in your SwiftUI app, add the `ChatView` SwiftUI view:
 
 ```swift
  ChatView(state: CurrentState(bpm: metronome.tempo),
-          dlm: dlm,
+          client: client,
           describe: describe(function:),
           execute: execute(function:))
 ```
