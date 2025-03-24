@@ -33,7 +33,7 @@ Note that parameters supported are: `String`, `Double`, `Float`, `Int`, `Bool`, 
 But, you'll want to add tradtional Swift-style documentation generating comments as well, because these will be use in a later step to help train the AI to best respond to your users. For instance:
 
 ```swift
-enum CompilerFunction: Sendable {
+enum CompilerFunction {
     /// Users can invoke this function to make something happen
     case doSomething
 
@@ -54,37 +54,5 @@ There are more things that you'll want to add to the CompilerFunction enum, but 
 
 ## Completing set up on the Developer Dashboard
 
-On the same page that you got your AppID you will see you available functions, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Function Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunction` enum and submit to get back a version of your Swift enum with a `case` for `noOp` and two new functions:
+On the same page that you got your AppID you will see you available functions, which will start with only one thing, a "NoOp" which is returned when no appropriate functions were found.  Head over to the "Function Builder" and open the tab for "Swift Enum Import".  In the Swift text area, paste in the complete text of the `CompilerFunctionGenerator` enum:
 
-```swift
-static func from(_ function: Function<Parameter>) -> CompilerFunction? {
-    ...
-}
-
-func describe(function: Function<Parameter>) -> String {
-    ...
-}
-```
-
-Update the `from` commend to perform the necessary actions in your app.
-
-Update `describe` with words that describe the actions. This will be used in the UI widget to give the user feedback that the apopropriate actions were taken.
-
-## Implement Compiler's `ChatView` in your app
-
-Somewhere in your SwiftUI app, add the `ChatView` SwiftUI view:
-
-```swift
- ChatView(state: CurrentState(bpm: metronome.tempo),
-          client: client,
-          describe: describe(function:),
-          execute: execute(function:))
-```
-
-The `describe` function was already created for you.  The execute function is where you finally perform the actions that were requested. 
-
-
-
-
-
-    

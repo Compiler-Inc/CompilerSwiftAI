@@ -1,7 +1,7 @@
 //  Copyright 2025 Compiler, Inc. All rights reserved.
 
 import Combine
-import SwiftUI
+import Foundation
 
 public struct Message: Sendable, Equatable {
     public enum Role: String, Sendable {

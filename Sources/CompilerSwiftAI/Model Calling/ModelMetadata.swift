@@ -1,7 +1,6 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
 import Combine
-import SwiftUI
 
 public typealias Model = String
 

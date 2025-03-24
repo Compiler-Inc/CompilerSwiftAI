@@ -1,7 +1,6 @@
 //  Copyright © 2025 Compiler, Inc. All rights reserved.
 
 import AuthenticationServices
-import SwiftUI
 
 /// Helper for Keychain operations
 actor KeychainHelper {
